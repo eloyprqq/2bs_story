@@ -1238,7 +1238,14 @@
       if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
     }
 
-    function qId(q) { return String(q.timestamp); }
+    function qId(q) {
+      const t = q.timestamp;
+      if (t instanceof Date) return String(t.getTime());
+      if (typeof t === 'number' && !isNaN(t)) return String(Math.round(t));
+      const s = String(t == null ? '' : t).trim();
+      if (/^\d+(\.\d+)?$/.test(s)) return String(Math.round(parseFloat(s)));
+      return s;
+    }
 
     function isAnswerRead(q) {
       return q.answerRead === '1' || q.answerRead === 1 || q.answerRead === true;
@@ -1297,7 +1304,7 @@
       }
     }
 
-    async function submitAnswer(timestamp) {
+    async function submitAnswer(timestamp, row) {
       const input = document.getElementById('ans-' + timestamp);
       if (!input) return;
       const answer = input.value.trim();
@@ -1307,22 +1314,37 @@
         answerDate: new Date().toLocaleString('ko-KR'),
         answerRead: ''
       };
+      const payload = { action: 'answerQuestion', timestamp, ...patch };
+      if (row) payload.row = row;
       updateQuestionLocal(timestamp, patch);
-      const data = await sheetQuestionAction({ action: 'answerQuestion', timestamp, ...patch });
+      const data = await sheetQuestionAction(payload);
       if (!data || !data.ok) alert('저장에 실패했을 수 있어요. 새로고침 후 확인해 주세요.');
       renderQuestions();
     }
 
-    async function deleteQuestion(timestamp) {
+    async function deleteQuestion(timestamp, row) {
       const pw = prompt('질문을 삭제하려면 비밀번호를 입력하세요');
       if (pw === null) return;
       if (pw !== DELETE_Q_PASSWORD) { alert('비밀번호가 틀려요'); return; }
-      deleteQuestionLocal(timestamp);
-      const data = await sheetQuestionAction({ action: 'deleteQuestion', timestamp, password: pw });
+      const ts = qId({ timestamp });
+      const payload = { action: 'deleteQuestion', timestamp: ts, password: pw };
+      if (row) payload.row = row;
+      const data = await sheetQuestionAction(payload);
       if (!data || !data.ok) {
-        alert(data && data.error === 'badpass' ? '비밀번호가 틀려요' : '삭제에 실패했을 수 있어요');
+        if (data && data.error === 'badpass') alert('비밀번호가 틀려요');
+        else if (data && data.error === 'unknown') {
+          alert('삭제 기능이 시트에 아직 없어요.\n\nApps Script에서 Code.gs를 최신으로 바꾸고\n「배포 → 새 버전」으로 다시 배포해 주세요.');
+        } else {
+          alert('삭제에 실패했어요. Apps Script를 새 버전으로 배포했는지 확인해 주세요.');
+        }
         return;
       }
+      const after = await loadQuestions();
+      if (after.some(q => qId(q) === ts)) {
+        alert('삭제가 시트에 반영되지 않았어요.\n\nCode.gs를 붙여넣고 「배포 → 새 버전」으로 다시 배포해 주세요.');
+        return;
+      }
+      deleteQuestionLocal(ts);
       renderQuestions();
     }
 
@@ -1830,11 +1852,12 @@
         list.forEach((q, i) => {
           const tr = document.createElement('tr');
           const ts = qId(q);
+          const row = q._row || '';
           const hasAns = q.answer && String(q.answer).trim();
           const ansBlock = hasAns
             ? `<div class="q-answer-done">${escapeHtml(q.answer)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">${escapeHtml(q.answerDate || '')}</div>`
             : `<textarea class="admin-answer-input" id="ans-${ts}" placeholder="답변을 적어 주세요" rows="2"></textarea>
-               <button type="button" class="admin-btn answer" onclick="submitAnswer('${ts}')">답변하기</button>`;
+               <button type="button" class="admin-btn answer" onclick="submitAnswer('${ts}', ${row || 'null'})">답변하기</button>`;
           tr.innerHTML = `
             <td>${i + 1}</td>
             <td><span class="course-pill">${escapeHtml(q.courseName || '—')}</span></td>
@@ -1842,7 +1865,7 @@
             <td class="q-cell">${escapeHtml(q.text)}</td>
             <td class="q-cell">${ansBlock}</td>
             <td>${escapeHtml(q.date)}</td>
-            <td><button type="button" class="admin-btn delete" onclick="deleteQuestion('${ts}')">삭제</button></td>`;
+            <td><button type="button" class="admin-btn delete" onclick="deleteQuestion('${ts}', ${row || 'null'})">삭제</button></td>`;
           tbody.appendChild(tr);
         });
       } catch (e) {

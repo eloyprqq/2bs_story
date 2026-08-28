@@ -1,182 +1,189 @@
-/**
- * 2BS 신청자·질문 저장 (Firebase 없이)
- *
- * 1. Google 스프레드시트 새로 만들기
- * 2. 확장 프로그램 > Apps Script 에 이 파일 붙여넣기
- * 3. 배포 > 새 배포 > 웹 앱
- *    - 실행 계정: 나
- *    - 액세스: 모든 사용자
- * 4. 나온 URL을 index.html 의 APPS_SCRIPT_URL 에 붙여넣기
- */
-
-var QUESTION_HEADERS = ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName', 'text', 'answer', 'answerDate', 'answerRead'];
-var DELETE_PASSWORD = '2026';
-
-function json_(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function sheet_(name, headers) {
-  var ss = SpreadsheetApp.getActive();
-  var sh = ss.getSheetByName(name);
-  if (!sh) {
-    sh = ss.insertSheet(name);
-    sh.appendRow(headers);
-  }
-  return sh;
-}
-
-function questionsSheet_() {
-  var sh = sheet_('questions', QUESTION_HEADERS);
-  var lastCol = Math.max(sh.getLastColumn(), QUESTION_HEADERS.length);
-  var existing = sh.getRange(1, 1, 1, lastCol).getValues()[0];
-  QUESTION_HEADERS.forEach(function(h, i) {
-    if (String(existing[i] || '') !== h) {
-      sh.getRange(1, i + 1).setValue(h);
-    }
-  });
-  return sh;
-}
-
-function rowsToObjects_(sh) {
-  var values = sh.getDataRange().getValues();
-  if (values.length < 2) return [];
-  var keys = values[0];
-  var items = [];
-  for (var i = values.length - 1; i >= 1; i--) {
-    var row = {};
-    keys.forEach(function(k, idx) { row[k] = values[i][idx]; });
-    items.push(row);
-  }
-  return items;
-}
-
-function findUser_(username) {
-  var sh = sheet_('users', ['username', 'passHash', 'created']);
-  var values = sh.getDataRange().getValues();
-  for (var i = 1; i < values.length; i++) {
-    if (String(values[i][0]) === String(username)) {
-      return { username: String(values[i][0]), passHash: String(values[i][1]) };
-    }
-  }
-  return null;
-}
-
-function findQuestionRow_(sh, timestamp) {
-  var values = sh.getDataRange().getValues();
-  var ts = String(timestamp);
-  for (var i = 1; i < values.length; i++) {
-    if (String(values[i][0]) === ts) return i + 1;
-  }
-  return -1;
-}
-
-function setQuestionField_(sh, row, field, value) {
-  var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
-  var col = headers.indexOf(field);
-  if (col >= 0) sh.getRange(row, col + 1).setValue(value);
-}
-
-function doGet(e) {
-  var p = (e && e.parameter) || {};
-  var action = p.action || 'listApplicants';
-
-  if (action === 'signup') {
-    var username = String(p.username || '').trim();
-    var passHash = String(p.passHash || '');
-    if (!username || !passHash) return json_({ ok: false, error: 'missing' });
-    if (findUser_(username)) return json_({ ok: false, error: 'exists' });
-    var userSh = sheet_('users', ['username', 'passHash', 'created']);
-    userSh.appendRow([username, passHash, new Date().toISOString()]);
-    return json_({ ok: true, username: username });
-  }
-
-  if (action === 'login') {
-    var loginName = String(p.username || '').trim();
-    var loginHash = String(p.passHash || '');
-    var user = findUser_(loginName);
-    if (!user || user.passHash !== loginHash) return json_({ ok: false, error: 'bad' });
-    return json_({ ok: true, username: user.username });
-  }
-
-  if (action === 'listQuestions') {
-    var qSh = questionsSheet_();
-    return json_({ items: rowsToObjects_(qSh) });
-  }
-
-  var appSh = sheet_('applicants', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName']);
-  return json_({ items: rowsToObjects_(appSh) });
-}
-
-function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-
-  if (data.action === 'signup') {
-    var suName = String(data.username || '').trim();
-    var suHash = String(data.passHash || '');
-    if (!suName || !suHash) return json_({ ok: false, error: 'missing' });
-    if (findUser_(suName)) return json_({ ok: false, error: 'exists' });
-    var suSh = sheet_('users', ['username', 'passHash', 'created']);
-    suSh.appendRow([suName, suHash, new Date().toISOString()]);
-    return json_({ ok: true, username: suName });
-  }
-
-  if (data.action === 'login') {
-    var liName = String(data.username || '').trim();
-    var liHash = String(data.passHash || '');
-    var liUser = findUser_(liName);
-    if (!liUser || liUser.passHash !== liHash) return json_({ ok: false, error: 'bad' });
-    return json_({ ok: true, username: liUser.username });
-  }
-
-  if (data.action === 'question') {
-    var qAdd = questionsSheet_();
-    qAdd.appendRow([
-      data.timestamp || Date.now(),
-      data.date || '',
-      data.name || '',
-      data.uid || '',
-      data.courseId || '',
-      data.courseName || '',
-      data.text || '',
-      '',
-      '',
-      ''
-    ]);
-    return json_({ ok: true });
-  }
-
-  if (data.action === 'answerQuestion') {
-    var qAns = questionsSheet_();
-    var ansRow = findQuestionRow_(qAns, data.timestamp);
-    if (ansRow < 0) return json_({ ok: false, error: 'notfound' });
-    setQuestionField_(qAns, ansRow, 'answer', data.answer || '');
-    setQuestionField_(qAns, ansRow, 'answerDate', data.answerDate || '');
-    setQuestionField_(qAns, ansRow, 'answerRead', '');
-    return json_({ ok: true });
-  }
-
-  if (data.action === 'deleteQuestion') {
-    if (String(data.password || '') !== DELETE_PASSWORD) return json_({ ok: false, error: 'badpass' });
-    var qDel = questionsSheet_();
-    var delRow = findQuestionRow_(qDel, data.timestamp);
-    if (delRow < 0) return json_({ ok: false, error: 'notfound' });
-    qDel.deleteRow(delRow);
-    return json_({ ok: true });
-  }
-
-  if (data.action === 'markAnswerRead') {
-    var qRead = questionsSheet_();
-    var readRow = findQuestionRow_(qRead, data.timestamp);
-    if (readRow < 0) return json_({ ok: false, error: 'notfound' });
-    setQuestionField_(qRead, readRow, 'answerRead', '1');
-    return json_({ ok: true });
-  }
-
-  var enSh = sheet_('applicants', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName']);
-  enSh.appendRow([data.timestamp || Date.now(), data.date || '', data.name || '', data.uid || '', data.courseId || '', data.courseName || '']);
-  return json_({ ok: true });
-}
-
+/**
+ * 2BS 신청자·질문 저장
+ * 배포: 실행=나, 액세스=모든 사용자
+ */
+
+var QUESTION_HEADERS = ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName', 'text', 'answer', 'answerDate', 'answerRead'];
+var DELETE_PASSWORD = '2026';
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function sheet_(name, headers) {
+  var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.appendRow(headers);
+  }
+  return sh;
+}
+
+function questionsSheet_() {
+  var sh = sheet_('questions', QUESTION_HEADERS);
+  var lastCol = Math.max(sh.getLastColumn(), QUESTION_HEADERS.length);
+  var existing = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+  QUESTION_HEADERS.forEach(function(h, i) {
+    if (String(existing[i] || '') !== h) sh.getRange(1, i + 1).setValue(h);
+  });
+  return sh;
+}
+
+function normalizeTs_(v) {
+  if (Object.prototype.toString.call(v) === '[object Date]') return String(v.getTime());
+  if (typeof v === 'number' && !isNaN(v)) return String(Math.round(v));
+  var s = String(v == null ? '' : v).trim();
+  if (/^\d+(\.\d+)?$/.test(s)) return String(Math.round(parseFloat(s)));
+  return s;
+}
+
+function rowsToObjects_(sh) {
+  var values = sh.getDataRange().getValues();
+  if (values.length < 2) return [];
+  var keys = values[0];
+  var items = [];
+  for (var i = values.length - 1; i >= 1; i--) {
+    var row = { _row: i + 1 };
+    keys.forEach(function(k, idx) { row[k] = values[i][idx]; });
+    row.timestamp = normalizeTs_(row.timestamp);
+    items.push(row);
+  }
+  return items;
+}
+
+function findUser_(username) {
+  var sh = sheet_('users', ['username', 'passHash', 'created']);
+  var values = sh.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(username)) {
+      return { username: String(values[i][0]), passHash: String(values[i][1]) };
+    }
+  }
+  return null;
+}
+
+function findQuestionRow_(sh, timestamp) {
+  var target = normalizeTs_(timestamp);
+  var values = sh.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) {
+    if (normalizeTs_(values[i][0]) === target) return i + 1;
+  }
+  return -1;
+}
+
+function setQuestionField_(sh, row, field, value) {
+  var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  var col = headers.indexOf(field);
+  if (col >= 0) sh.getRange(row, col + 1).setValue(value);
+}
+
+function deleteQuestion_(data) {
+  if (String(data.password || '') !== DELETE_PASSWORD) return json_({ ok: false, error: 'badpass' });
+  var sh = questionsSheet_();
+  var rowNum = parseInt(data.row, 10);
+  if (rowNum > 1 && rowNum <= sh.getLastRow()) {
+    sh.deleteRow(rowNum);
+    return json_({ ok: true });
+  }
+  var delRow = findQuestionRow_(sh, data.timestamp);
+  if (delRow < 0) return json_({ ok: false, error: 'notfound' });
+  sh.deleteRow(delRow);
+  return json_({ ok: true });
+}
+
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  var action = p.action || 'listApplicants';
+
+  if (action === 'signup') {
+    var username = String(p.username || '').trim();
+    var passHash = String(p.passHash || '');
+    if (!username || !passHash) return json_({ ok: false, error: 'missing' });
+    if (findUser_(username)) return json_({ ok: false, error: 'exists' });
+    sheet_('users', ['username', 'passHash', 'created']).appendRow([username, passHash, new Date().toISOString()]);
+    return json_({ ok: true, username: username });
+  }
+
+  if (action === 'login') {
+    var loginName = String(p.username || '').trim();
+    var loginHash = String(p.passHash || '');
+    var user = findUser_(loginName);
+    if (!user || user.passHash !== loginHash) return json_({ ok: false, error: 'bad' });
+    return json_({ ok: true, username: user.username });
+  }
+
+  if (action === 'listQuestions') {
+    return json_({ items: rowsToObjects_(questionsSheet_()) });
+  }
+
+  if (action === 'listApplicants') {
+    return json_({ items: rowsToObjects_(sheet_('applicants', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName'])) });
+  }
+
+  return json_({ ok: false, error: 'unknown' });
+}
+
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+
+  if (data.action === 'signup') {
+    var suName = String(data.username || '').trim();
+    var suHash = String(data.passHash || '');
+    if (!suName || !suHash) return json_({ ok: false, error: 'missing' });
+    if (findUser_(suName)) return json_({ ok: false, error: 'exists' });
+    sheet_('users', ['username', 'passHash', 'created']).appendRow([suName, suHash, new Date().toISOString()]);
+    return json_({ ok: true, username: suName });
+  }
+
+  if (data.action === 'login') {
+    var liName = String(data.username || '').trim();
+    var liHash = String(data.passHash || '');
+    var liUser = findUser_(liName);
+    if (!liUser || liUser.passHash !== liHash) return json_({ ok: false, error: 'bad' });
+    return json_({ ok: true, username: liUser.username });
+  }
+
+  if (data.action === 'question') {
+    questionsSheet_().appendRow([
+      normalizeTs_(data.timestamp || Date.now()),
+      data.date || '', data.name || '', data.uid || '',
+      data.courseId || '', data.courseName || '', data.text || '',
+      '', '', ''
+    ]);
+    return json_({ ok: true });
+  }
+
+  if (data.action === 'answerQuestion') {
+    var sh = questionsSheet_();
+    var ansRow = data.row ? parseInt(data.row, 10) : findQuestionRow_(sh, data.timestamp);
+    if (ansRow < 2) return json_({ ok: false, error: 'notfound' });
+    setQuestionField_(sh, ansRow, 'answer', data.answer || '');
+    setQuestionField_(sh, ansRow, 'answerDate', data.answerDate || '');
+    setQuestionField_(sh, ansRow, 'answerRead', '');
+    return json_({ ok: true });
+  }
+
+  if (data.action === 'deleteQuestion') {
+    return deleteQuestion_(data);
+  }
+
+  if (data.action === 'markAnswerRead') {
+    var qRead = questionsSheet_();
+    var readRow = data.row ? parseInt(data.row, 10) : findQuestionRow_(qRead, data.timestamp);
+    if (readRow < 2) return json_({ ok: false, error: 'notfound' });
+    setQuestionField_(qRead, readRow, 'answerRead', '1');
+    return json_({ ok: true });
+  }
+
+  if (data.action === 'enroll') {
+    sheet_('applicants', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName']).appendRow([
+      normalizeTs_(data.timestamp || Date.now()),
+      data.date || '', data.name || '', data.uid || '', data.courseId || '', data.courseName || ''
+    ]);
+    return json_({ ok: true });
+  }
+
+  return json_({ ok: false, error: 'unknown' });
+}
