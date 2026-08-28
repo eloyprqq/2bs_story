@@ -497,6 +497,34 @@
     }
     .q-item .q-meta { font-size:12px; color:var(--text-muted); margin-bottom:6px; }
     .q-item .q-body { line-height:1.6; white-space:pre-wrap; }
+    .q-answer {
+      margin-top:10px; padding:12px; background:#f0fdf4; border-radius:10px;
+      border:1px solid #bbf7d0;
+    }
+    .q-answer.new { border-color:#22c55e; box-shadow:0 0 0 2px rgba(34,197,94,0.15); }
+    .q-answer-label { font-size:12px; font-weight:800; color:#16a34a; margin-bottom:6px; }
+    .q-answer-body { line-height:1.6; white-space:pre-wrap; font-size:14px; }
+    .q-waiting { font-size:13px; color:var(--text-muted); margin-top:8px; font-style:italic; }
+    .btn-read {
+      margin-top:10px; padding:8px 14px; background:#16a34a; color:#fff; border:none;
+      border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit; font-size:13px;
+    }
+    .answer-badge {
+      display:inline-block; margin-left:6px; font-size:12px; font-weight:800;
+      color:#dc2626; background:#fef2f2; padding:2px 8px; border-radius:6px; vertical-align:middle;
+    }
+    .admin-btn {
+      padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700;
+      cursor:pointer; border:none; font-family:inherit;
+    }
+    .admin-btn.answer { background:var(--blue); color:#fff; margin-top:6px; display:block; }
+    .admin-btn.delete { background:#fee2e2; color:#dc2626; }
+    .admin-answer-input {
+      width:100%; min-width:140px; padding:8px; border:1px solid #e2e8f0;
+      border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;
+    }
+    .q-answer-done { white-space:pre-wrap; line-height:1.5; font-size:13px; color:#166534; }
+    .q-cell { max-width:220px; vertical-align:top; }
     .btn-secondary {
       background:#fff; color:var(--blue); border:2px solid var(--blue);
       padding:16px 28px; border-radius:999px; font-size:15px; font-weight:700;
@@ -728,7 +756,7 @@
         <h3 class="section-title" style="margin:32px 0 16px">학생 질문</h3>
         <div class="applicant-table">
           <table>
-            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>질문</th><th>일시</th></tr></thead>
+            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>질문</th><th>답변</th><th>일시</th><th>관리</th></tr></thead>
             <tbody id="question-list"></tbody>
           </table>
           <div class="empty-state" id="empty-questions" style="display:none">
@@ -1032,11 +1060,13 @@
     const LS_APPLICANTS = '2bs_applicants';
     const LS_QUESTIONS = '2bs_questions';
     const LS_ACCOUNTS = '2bs_accounts';
+    const DELETE_Q_PASSWORD = '2026';
 
     let currentUser = null;
     let currentCourseId = 'python';
     let adminFilter = 'all';
     let gateConnected = false;
+    let unreadByCourse = {};
 
     function sheetReady() {
       return !!(APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('http') === 0);
@@ -1068,6 +1098,7 @@
       localStorage.setItem(LS_USER, JSON.stringify(user));
       closeLoginModal();
       renderAuth();
+      renderCourseGrid();
       if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
     }
 
@@ -1078,6 +1109,7 @@
         if (saved && saved.displayName) currentUser = saved;
       } catch (e) {}
       renderAuth();
+      renderCourseGrid();
     }
 
     function renderAuth() {
@@ -1199,9 +1231,111 @@
 
     function logoutLocal() {
       currentUser = null;
+      unreadByCourse = {};
       localStorage.removeItem(LS_USER);
       renderAuth();
+      renderCourseGrid();
       if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
+    }
+
+    function qId(q) { return String(q.timestamp); }
+
+    function isAnswerRead(q) {
+      return q.answerRead === '1' || q.answerRead === 1 || q.answerRead === true;
+    }
+
+    function hasUnreadAnswer(q) {
+      return q.answer && String(q.answer).trim() && !isAnswerRead(q);
+    }
+
+    async function refreshUnreadAnswers() {
+      unreadByCourse = {};
+      if (!currentUser) return;
+      const all = await loadQuestions();
+      const mine = all.filter(q => q.uid === currentUser.uid || q.name === currentUser.displayName);
+      mine.forEach(q => {
+        if (hasUnreadAnswer(q)) {
+          const cid = q.courseId || '';
+          unreadByCourse[cid] = (unreadByCourse[cid] || 0) + 1;
+        }
+      });
+    }
+
+    function courseTitleWithBadge(c) {
+      const n = unreadByCourse[c.id] || 0;
+      const title = c.title.replace(/\n/g, '<br>');
+      if (n > 0) return title + `<span class="answer-badge">(대답 옴, ${n}개)</span>`;
+      return title;
+    }
+
+    function updateQuestionLocal(timestamp, patch) {
+      const list = readJson(LS_QUESTIONS, []);
+      const idx = list.findIndex(q => qId(q) === String(timestamp));
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...patch };
+        writeJson(LS_QUESTIONS, list);
+      }
+    }
+
+    function deleteQuestionLocal(timestamp) {
+      const list = readJson(LS_QUESTIONS, []);
+      writeJson(LS_QUESTIONS, list.filter(q => qId(q) !== String(timestamp)));
+    }
+
+    async function sheetQuestionAction(payload) {
+      if (!sheetReady()) return { ok: true };
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) return { ok: false };
+        return await res.json();
+      } catch (e) {
+        return { ok: false };
+      }
+    }
+
+    async function submitAnswer(timestamp) {
+      const input = document.getElementById('ans-' + timestamp);
+      if (!input) return;
+      const answer = input.value.trim();
+      if (!answer) { alert('답변 내용을 적어 주세요'); return; }
+      const patch = {
+        answer,
+        answerDate: new Date().toLocaleString('ko-KR'),
+        answerRead: ''
+      };
+      updateQuestionLocal(timestamp, patch);
+      const data = await sheetQuestionAction({ action: 'answerQuestion', timestamp, ...patch });
+      if (!data || !data.ok) alert('저장에 실패했을 수 있어요. 새로고침 후 확인해 주세요.');
+      renderQuestions();
+    }
+
+    async function deleteQuestion(timestamp) {
+      const pw = prompt('질문을 삭제하려면 비밀번호를 입력하세요');
+      if (pw === null) return;
+      if (pw !== DELETE_Q_PASSWORD) { alert('비밀번호가 틀려요'); return; }
+      deleteQuestionLocal(timestamp);
+      const data = await sheetQuestionAction({ action: 'deleteQuestion', timestamp, password: pw });
+      if (!data || !data.ok) {
+        alert(data && data.error === 'badpass' ? '비밀번호가 틀려요' : '삭제에 실패했을 수 있어요');
+        return;
+      }
+      renderQuestions();
+    }
+
+    async function markAnswerRead(timestamp) {
+      updateQuestionLocal(timestamp, { answerRead: '1' });
+      await sheetQuestionAction({ action: 'markAnswerRead', timestamp });
+      await refreshUnreadAnswers();
+      renderMyQuestions();
+      renderMyRoom();
+      renderCourseGrid();
+      if (document.getElementById('page-course').classList.contains('active')) {
+        openCourse(currentCourseId);
+      }
     }
 
     function courseCount() {
@@ -1212,7 +1346,8 @@
       return '₩' + Number(n).toLocaleString('ko-KR');
     }
 
-    function renderCourseGrid() {
+    async function renderCourseGrid() {
+      if (currentUser) await refreshUnreadAnswers();
       const n = courseCount();
       document.getElementById('course-count').textContent = `총 ${n}개 강의`;
       const hero = document.getElementById('hero-course-count');
@@ -1229,15 +1364,16 @@
           </div>
           <div class="info">
             <div class="meta">${c.meta.map(m => `<span>${m}</span>`).join('')}</div>
-            <h3>${c.title.replace(/\n/g, '<br>')}</h3>
+            <h3>${courseTitleWithBadge(c)}</h3>
             <div class="play-area"><div class="play-btn"></div></div>
           </div>
         </div>
       `).join('');
     }
 
-    function openCourse(id) {
+    async function openCourse(id) {
       currentCourseId = id;
+      if (currentUser) await refreshUnreadAnswers();
       const c = COURSES[id];
       const tags = c.tags.map((t, i) => `<span class="tag ${c.tagClass[i] || 'blue'}">${t}</span>`).join('');
       const btn = c.enroll
@@ -1254,7 +1390,7 @@
       document.getElementById('course-detail-content').innerHTML = `
         <div class="course-detail-left">
           <div class="course-tags">${tags}</div>
-          <h1 class="course-title">${c.title.replace(/\n/g, '<br>')}</h1>
+          <h1 class="course-title">${courseTitleWithBadge(c)}</h1>
           <p class="course-desc">${c.desc}</p>
           ${teacherBlock}
           <div class="pass-bar">
@@ -1283,6 +1419,7 @@
       document.getElementById('page-' + id).classList.add('active');
       if (id === 'admin') { renderApplicants(); renderQuestions(); }
       if (id === 'room') renderMyRoom();
+      if (id === 'home') renderCourseGrid();
       syncNav(id);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1457,7 +1594,8 @@
         name, courseId, courseName: c ? c.shortTitle : courseId,
         uid: currentUser && currentUser.uid,
         text, date: new Date().toLocaleString('ko-KR'),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        answer: '', answerDate: '', answerRead: ''
       };
       const list = readJson(LS_QUESTIONS, []);
       list.unshift(row);
@@ -1529,6 +1667,7 @@
 
       gate.style.display = 'none';
       ask.style.display = 'block';
+      await refreshUnreadAnswers();
       fillAskCourseSelect();
       renderMyQuestions();
 
@@ -1549,7 +1688,7 @@
           </div>
           <div class="info">
             <div class="meta">${c.meta.map(m => `<span>${m}</span>`).join('')}</div>
-            <h3>${c.title.replace(/\n/g, '<br>')}</h3>
+            <h3>${courseTitleWithBadge(c)}</h3>
             <div class="play-area"><div class="play-btn"></div></div>
           </div>
         </div>
@@ -1573,12 +1712,27 @@
         return;
       }
       box.innerHTML = '<div style="font-size:13px;font-weight:800;margin:16px 0 8px">내가 보낸 질문</div>' +
-        mine.map(q => `
-          <div class="q-item">
-            <div class="q-meta">${escapeHtml(q.courseName || '')} · ${escapeHtml(q.date || '')}</div>
-            <div class="q-body">${escapeHtml(q.text || '')}</div>
-          </div>
-        `).join('');
+        mine.map(q => {
+          const ts = qId(q);
+          const unread = hasUnreadAnswer(q);
+          let answerBlock = '';
+          if (q.answer && String(q.answer).trim()) {
+            answerBlock = `
+              <div class="q-answer ${unread ? 'new' : ''}">
+                <div class="q-answer-label">선생님 답변 · ${escapeHtml(q.answerDate || '')}</div>
+                <div class="q-answer-body">${escapeHtml(q.answer)}</div>
+                ${unread ? `<button type="button" class="btn-read" onclick="markAnswerRead('${ts}')">확인했어요</button>` : ''}
+              </div>`;
+          } else {
+            answerBlock = '<div class="q-waiting">답변 대기 중...</div>';
+          }
+          return `
+            <div class="q-item">
+              <div class="q-meta">${escapeHtml(q.courseName || '')} · ${escapeHtml(q.date || '')}</div>
+              <div class="q-body">${escapeHtml(q.text || '')}</div>
+              ${answerBlock}
+            </div>`;
+        }).join('');
     }
 
     async function submitQuestion() {
@@ -1675,7 +1829,20 @@
         empty.style.display = 'none';
         list.forEach((q, i) => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${i + 1}</td><td><span class="course-pill">${escapeHtml(q.courseName || '—')}</span></td><td>${escapeHtml(q.name)}</td><td>${escapeHtml(q.text)}</td><td>${escapeHtml(q.date)}</td>`;
+          const ts = qId(q);
+          const hasAns = q.answer && String(q.answer).trim();
+          const ansBlock = hasAns
+            ? `<div class="q-answer-done">${escapeHtml(q.answer)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">${escapeHtml(q.answerDate || '')}</div>`
+            : `<textarea class="admin-answer-input" id="ans-${ts}" placeholder="답변을 적어 주세요" rows="2"></textarea>
+               <button type="button" class="admin-btn answer" onclick="submitAnswer('${ts}')">답변하기</button>`;
+          tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td><span class="course-pill">${escapeHtml(q.courseName || '—')}</span></td>
+            <td>${escapeHtml(q.name)}</td>
+            <td class="q-cell">${escapeHtml(q.text)}</td>
+            <td class="q-cell">${ansBlock}</td>
+            <td>${escapeHtml(q.date)}</td>
+            <td><button type="button" class="admin-btn delete" onclick="deleteQuestion('${ts}')">삭제</button></td>`;
           tbody.appendChild(tr);
         });
       } catch (e) {
