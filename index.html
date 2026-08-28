@@ -503,6 +503,8 @@
       cursor:pointer; font-family:inherit; margin-left:8px;
     }
 
+    .form-iframe { width:100%; height:min(70vh, 640px); border:0; background:#f8fafc; }
+
     .login-gate {
       background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg);
       padding:48px 32px; text-align:center; box-shadow:var(--shadow-sm);
@@ -608,7 +610,7 @@
   </svg>
 
   <div id="setup-banner" class="setup-banner">
-    지금은 이 컴퓨터에서만 로그인돼요. 친구들이랑 같은 아이디로 쓰려면 구글 시트 URL을 연결하세요.
+    ⚠️ Firebase 설정이 필요해요! `FIREBASE_CONFIG`에 값을 넣고, Authentication에서 Google 로그인을 켜 주세요.
   </div>
 
   <div class="site-wrap">
@@ -682,8 +684,8 @@
         </div>
         <div id="room-gate" class="login-gate" style="display:none">
           <h2>로그인이 필요해요</h2>
-          <p>나의 학습방에 담은 강의를 보려면<br>로그인하거나 회원가입 해주세요.</p>
-          <button type="button" class="login-btn" onclick="openLoginModal()">👤 로그인</button>
+          <p>나의 학습방에 담은 강의를 보려면<br>구글 계정으로 로그인해 주세요.</p>
+          <button type="button" class="login-btn" onclick="loginWithGoogle()">구글 계정으로 로그인</button>
         </div>
         <div class="course-grid" id="room-grid"></div>
         <div class="empty-state" id="room-empty" style="display:none">
@@ -691,7 +693,7 @@
         </div>
         <div class="ask-panel" id="room-ask" style="display:none">
           <h3>선생님께 질문하기</h3>
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">질문은 선생님 페이지에 모입니다. 시트 연결 전이면 이 컴퓨터에만 남아요.</p>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">질문은 Firebase에 저장되고, 선생님 페이지에서 볼 수 있어요.</p>
           <select id="ask-course"></select>
           <textarea id="ask-text" placeholder="궁금한 점을 적어 주세요"></textarea>
           <button type="button" class="btn-submit" style="width:auto;padding:12px 24px" onclick="submitQuestion()">질문 보내기</button>
@@ -706,7 +708,7 @@
         <div class="back-link" onclick="showPage('home')">← 강의 목록으로</div>
         <div class="admin-header">
           <h2>👨‍🏫 선생님 전용 — 수강신청 현황</h2>
-          <p>신청자와 학생 질문을 한곳에서 확인하세요. 구글 시트를 연결하면 다른 기기에서도 볼 수 있습니다.</p>
+          <p>신청자와 학생 질문을 Firebase에서 한곳에 모아 봅니다.</p>
         </div>
         <div class="admin-stats">
           <div class="stat-card"><strong id="stat-count">—</strong><span>총 신청자</span></div>
@@ -781,46 +783,19 @@
   <div class="modal-overlay" id="login-modal">
     <div class="modal">
       <div class="modal-header">
-        <h2 id="auth-title">로그인</h2>
-        <p>아이디와 비밀번호로 들어가요</p>
+        <h2>로그인</h2>
+        <p>구글 계정으로 들어가요</p>
       </div>
       <div class="modal-body">
-        <div class="auth-tabs">
-          <button type="button" class="auth-tab active" id="tab-login" onclick="showAuthTab('login')">로그인</button>
-          <button type="button" class="auth-tab" id="tab-signup" onclick="showAuthTab('signup')">회원가입</button>
-        </div>
-        <div class="auth-error" id="auth-error"></div>
-        <div class="auth-panel show" id="panel-login">
-          <div class="form-group">
-            <label for="login-id">아이디</label>
-            <input type="text" id="login-id" placeholder="아이디" maxlength="20" autocomplete="username">
-          </div>
-          <div class="form-group">
-            <label for="login-pw">비밀번호</label>
-            <input type="password" id="login-pw" placeholder="비밀번호" maxlength="40" autocomplete="current-password">
-          </div>
-          <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeLoginModal()">취소</button>
-            <button class="btn-submit" onclick="submitLogin()">로그인</button>
-          </div>
-        </div>
-        <div class="auth-panel" id="panel-signup">
-          <div class="form-group">
-            <label for="signup-id">아이디</label>
-            <input type="text" id="signup-id" placeholder="사용할 아이디" maxlength="20" autocomplete="username">
-          </div>
-          <div class="form-group">
-            <label for="signup-pw">비밀번호</label>
-            <input type="password" id="signup-pw" placeholder="비밀번호" maxlength="40" autocomplete="new-password">
-          </div>
-          <div class="form-group">
-            <label for="signup-pw2">비밀번호 확인</label>
-            <input type="password" id="signup-pw2" placeholder="한 번 더 입력" maxlength="40" autocomplete="new-password">
-          </div>
-          <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeLoginModal()">취소</button>
-            <button class="btn-submit" onclick="submitSignup()">가입하기</button>
-          </div>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">
+          로그인하면 나의 학습방, 수강신청, 질문하기를 쓸 수 있어요.
+        </p>
+        <button type="button" class="login-btn" style="width:100%;justify-content:center" onclick="loginWithGoogle()">
+          <svg class="g-icon" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96L3.96 7.3C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+          구글 계정으로 로그인
+        </button>
+        <div class="modal-actions" style="margin-top:20px">
+          <button class="btn-cancel" onclick="closeLoginModal()">취소</button>
         </div>
       </div>
     </div>
@@ -845,6 +820,9 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script>
 
     const COURSES = {
@@ -1023,84 +1001,70 @@
       }
     };
 
-    const APPS_SCRIPT_URL = '';
-    const ADMIN_CODE = '송율호와김도윤1234';
-    const LS_ENROLL = '2bs_my_enrollments';
-    const LS_USER = '2bs_user';
-    const LS_APPLICANTS = '2bs_applicants';
-    const LS_QUESTIONS = '2bs_questions';
-    const LS_ACCOUNTS = '2bs_accounts';
+    const FIREBASE_CONFIG = {
+      apiKey: "여기에-붙여넣기",
+      authDomain: "여기에-붙여넣기",
+      projectId: "여기에-붙여넣기",
+      storageBucket: "여기에-붙여넣기",
+      messagingSenderId: "여기에-붙여넣기",
+      appId: "여기에-붙여넣기"
+    };
 
+    const ADMIN_CODE = '송율호와김도윤1234';
+    const COLLECTION = 'applicants';
+    const QUESTIONS_COLLECTION = 'questions';
+    const LS_ENROLL = '2bs_my_enrollments';
+    const GOOGLE_ICON = '<svg class="g-icon" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96L3.96 7.3C4.68 5.16 6.66 3.58 9 3.58z"/></svg>';
+
+    let db = null, firebaseReady = false;
     let currentUser = null;
     let currentCourseId = 'python';
     let adminFilter = 'all';
     let gateConnected = false;
 
-    function sheetReady() {
-      return !!(APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('http') === 0);
-    }
-
-    function showAuthError(msg) {
-      const el = document.getElementById('auth-error');
-      el.textContent = msg || '';
-      el.classList.toggle('show', !!msg);
-    }
-
-    function showAuthTab(tab) {
-      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-      document.getElementById('panel-login').classList.toggle('show', tab === 'login');
-      document.getElementById('panel-signup').classList.toggle('show', tab === 'signup');
-      document.getElementById('auth-title').textContent = tab === 'login' ? '로그인' : '회원가입';
-      showAuthError('');
-    }
-
-    async function hashPass(pw) {
-      const data = new TextEncoder().encode('2bs-club:' + pw);
-      const buf = await crypto.subtle.digest('SHA-256', data);
-      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    function setSession(user) {
-      currentUser = user;
-      localStorage.setItem(LS_USER, JSON.stringify(user));
-      closeLoginModal();
-      renderAuth();
-      if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
-    }
-
-    function initStorage() {
-      if (!sheetReady()) document.getElementById('setup-banner').classList.add('show');
+    function initFirebase() {
+      if (FIREBASE_CONFIG.apiKey.includes('여기에')) {
+        document.getElementById('setup-banner').classList.add('show');
+        renderAuth();
+        return false;
+      }
       try {
-        const saved = JSON.parse(localStorage.getItem(LS_USER) || 'null');
-        if (saved && saved.displayName) currentUser = saved;
-      } catch (e) {}
-      renderAuth();
+        firebase.initializeApp(FIREBASE_CONFIG);
+        db = firebase.firestore();
+        firebaseReady = true;
+        firebase.auth().onAuthStateChanged(user => {
+          currentUser = user;
+          renderAuth();
+          if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
+        });
+        return true;
+      } catch (e) {
+        document.getElementById('setup-banner').classList.add('show');
+        renderAuth();
+        return false;
+      }
     }
 
     function renderAuth() {
       const el = document.getElementById('auth-area');
       if (!el) return;
       if (currentUser) {
-        const name = escapeHtml(currentUser.displayName);
+        const name = escapeHtml(currentUser.displayName || currentUser.email || '사용자');
+        const photo = currentUser.photoURL
+          ? `<img src="${escapeHtml(currentUser.photoURL)}" alt="">`
+          : `<span class="teacher-avatar" style="width:28px;height:28px">${name.slice(0,1)}</span>`;
         el.innerHTML = `
           <div class="user-chip">
-            <span class="teacher-avatar" style="width:28px;height:28px">${name.slice(0,1)}</span>
+            ${photo}
             <span>${name}</span>
-            <button type="button" class="logout-btn" onclick="logoutLocal()">로그아웃</button>
+            <button type="button" class="logout-btn" onclick="logoutGoogle()">로그아웃</button>
           </div>`;
       } else {
-        el.innerHTML = `<button type="button" class="login-btn" onclick="openLoginModal()">👤 로그인</button>`;
+        el.innerHTML = `<button type="button" class="login-btn" onclick="openLoginModal()">${GOOGLE_ICON} 구글 계정으로 로그인</button>`;
       }
     }
 
     function openLoginModal() {
-      showAuthTab('login');
-      ['login-id','login-pw','signup-id','signup-pw','signup-pw2'].forEach(id => {
-        const n = document.getElementById(id);
-        if (n) n.value = '';
-      });
-      showAuthError('');
       document.getElementById('login-modal').classList.add('show');
     }
 
@@ -1108,69 +1072,27 @@
       document.getElementById('login-modal').classList.remove('show');
     }
 
-    async function sheetCall(params) {
-      if (!sheetReady()) return null;
-      const res = await fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(params));
-      return res.json();
-    }
-
-    async function submitSignup() {
-      const id = document.getElementById('signup-id').value.trim();
-      const pw = document.getElementById('signup-pw').value;
-      const pw2 = document.getElementById('signup-pw2').value;
-      if (id.length < 2) { showAuthError('아이디는 2글자 이상이어야 해요'); return; }
-      if (pw.length < 4) { showAuthError('비밀번호는 4글자 이상이어야 해요'); return; }
-      if (pw !== pw2) { showAuthError('비밀번호가 서로 달라요'); return; }
-      const passHash = await hashPass(pw);
-
-      if (sheetReady()) {
-        try {
-          const data = await sheetCall({ action: 'signup', username: id, passHash });
-          if (!data || !data.ok) {
-            showAuthError(data && data.error === 'exists' ? '이미 있는 아이디예요' : '가입에 실패했어요. 시트 주소를 확인해 주세요.');
-            return;
-          }
-        } catch (e) {
-          showAuthError('가입에 실패했어요. 인터넷과 시트 주소를 확인해 주세요.');
-          return;
-        }
-      } else {
-        const accounts = readJson(LS_ACCOUNTS, {});
-        if (accounts[id]) { showAuthError('이미 있는 아이디예요'); return; }
-        accounts[id] = passHash;
-        writeJson(LS_ACCOUNTS, accounts);
+    async function loginWithGoogle() {
+      if (!firebaseReady) {
+        alert('Firebase 설정이 아직 안 됐어요. FIREBASE_CONFIG 값을 넣어 주세요.');
+        return false;
       }
-      setSession({ uid: 'u:' + id, displayName: id });
-    }
-
-    async function submitLogin() {
-      const id = document.getElementById('login-id').value.trim();
-      const pw = document.getElementById('login-pw').value;
-      if (!id || !pw) { showAuthError('아이디와 비밀번호를 입력하세요'); return; }
-      const passHash = await hashPass(pw);
-
-      if (sheetReady()) {
-        try {
-          const data = await sheetCall({ action: 'login', username: id, passHash });
-          if (!data || !data.ok) { showAuthError('아이디 또는 비밀번호가 틀려요'); return; }
-        } catch (e) {
-          showAuthError('로그인에 실패했어요. 시트 주소를 확인해 주세요.');
-          return;
-        }
-      } else {
-        const accounts = readJson(LS_ACCOUNTS, {});
-        if (!accounts[id] || accounts[id] !== passHash) {
-          showAuthError('아이디 또는 비밀번호가 틀려요');
-          return;
-        }
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        await firebase.auth().signInWithPopup(provider);
+        closeLoginModal();
+        return true;
+      } catch (e) {
+        if (e && e.code === 'auth/popup-closed-by-user') return false;
+        alert('구글 로그인에 실패했어요. Firebase Authentication에서 Google 로그인을 켜고, 사이트 주소를 허용 목록에 넣어 주세요.');
+        return false;
       }
-      setSession({ uid: 'u:' + id, displayName: id });
     }
 
-    function logoutLocal() {
-      currentUser = null;
-      localStorage.removeItem(LS_USER);
-      renderAuth();
+    async function logoutGoogle() {
+      if (!firebaseReady) return;
+      await firebase.auth().signOut();
       if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
     }
 
@@ -1272,14 +1194,14 @@
 
     async function openEnrollModal() {
       if (!currentUser) {
-        const ok = confirm('학습방에 담으려면 로그인해야 합니다. 지금 로그인할까요?');
+        const ok = confirm('학습방에 담으려면 구글 계정으로 로그인해야 합니다. 지금 로그인할까요?');
         if (!ok) return;
-        openLoginModal();
-        return;
+        const loggedIn = await loginWithGoogle();
+        if (!loggedIn) return;
       }
       const c = COURSES[currentCourseId];
       document.getElementById('modal-course-name').textContent = c.title.replace(/\n/g, ' ');
-      document.getElementById('student-name').value = currentUser && currentUser.displayName ? currentUser.displayName : '';
+      document.getElementById('student-name').value = currentUser ? (currentUser.displayName || currentUser.email || '') : '';
       document.getElementById('check-all').checked = false;
       gateConnected = false;
 
@@ -1383,25 +1305,68 @@
       localStorage.setItem(key, JSON.stringify(value));
     }
 
-    async function sheetPost(payload) {
-      if (!sheetReady()) return false;
-      try {
-        await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-        return true;
-      } catch (e) {
-        return false;
-      }
+    async function saveApplicant(name, courseId) {
+      if (!firebaseReady) { alert('Firebase 설정이 완료되지 않았습니다.'); return false; }
+      const c = COURSES[courseId];
+      const uid = currentUser && currentUser.uid;
+      if (uid) writeLocalEnrollment(uid, courseId, name);
+      await db.collection(COLLECTION).add({
+        name,
+        courseId,
+        courseName: c.shortTitle,
+        uid: uid || null,
+        email: currentUser && currentUser.email ? currentUser.email : null,
+        date: new Date().toLocaleString('ko-KR'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return true;
     }
 
-    async function sheetGet(action) {
-      if (!sheetReady()) return null;
-      const res = await fetch(APPS_SCRIPT_URL + '?action=' + encodeURIComponent(action));
-      const data = await res.json();
-      return data.items || [];
+    async function saveQuestion(name, courseId, text) {
+      if (!firebaseReady) { alert('Firebase 설정이 완료되지 않았습니다.'); return false; }
+      const c = COURSES[courseId];
+      await db.collection(QUESTIONS_COLLECTION).add({
+        name,
+        courseId,
+        courseName: c ? c.shortTitle : courseId,
+        uid: currentUser && currentUser.uid,
+        email: currentUser && currentUser.email ? currentUser.email : null,
+        text,
+        date: new Date().toLocaleString('ko-KR'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return true;
+    }
+
+    async function loadMyEnrollments() {
+      if (!currentUser) return [];
+      const local = readLocalEnrollments(currentUser.uid);
+      let remote = [];
+      if (firebaseReady) {
+        try {
+          const snap = await db.collection(COLLECTION).where('uid', '==', currentUser.uid).get();
+          remote = snap.docs.map(doc => doc.data());
+        } catch (e) {
+          remote = [];
+        }
+      }
+      const byId = {};
+      [...local, ...remote].forEach(item => {
+        if (item.courseId && !byId[item.courseId]) byId[item.courseId] = item;
+      });
+      return Object.values(byId);
+    }
+
+    async function loadApplicants() {
+      if (!firebaseReady) return [];
+      const snap = await db.collection(COLLECTION).orderBy('timestamp', 'desc').get();
+      return snap.docs.map(doc => doc.data());
+    }
+
+    async function loadQuestions() {
+      if (!firebaseReady) return [];
+      const snap = await db.collection(QUESTIONS_COLLECTION).orderBy('timestamp', 'desc').get();
+      return snap.docs.map(doc => doc.data());
     }
 
     function readLocalEnrollments(uid) {
@@ -1416,69 +1381,6 @@
         all[uid].push({ courseId, name, date: new Date().toLocaleString('ko-KR') });
       }
       writeJson(LS_ENROLL, all);
-    }
-
-    async function saveApplicant(name, courseId) {
-      const c = COURSES[courseId];
-      const uid = currentUser && currentUser.uid;
-      const row = {
-        name, courseId, courseName: c.shortTitle,
-        uid: uid || null,
-        date: new Date().toLocaleString('ko-KR'),
-        timestamp: Date.now()
-      };
-      if (uid) writeLocalEnrollment(uid, courseId, name);
-      const list = readJson(LS_APPLICANTS, []);
-      list.unshift(row);
-      writeJson(LS_APPLICANTS, list);
-      await sheetPost({ action: 'enroll', ...row });
-      return true;
-    }
-
-    async function saveQuestion(name, courseId, text) {
-      const c = COURSES[courseId];
-      const row = {
-        name, courseId, courseName: c ? c.shortTitle : courseId,
-        uid: currentUser && currentUser.uid,
-        text, date: new Date().toLocaleString('ko-KR'),
-        timestamp: Date.now()
-      };
-      const list = readJson(LS_QUESTIONS, []);
-      list.unshift(row);
-      writeJson(LS_QUESTIONS, list);
-      await sheetPost({ action: 'question', ...row });
-      return true;
-    }
-
-    async function loadMyEnrollments() {
-      if (!currentUser) return [];
-      const local = readLocalEnrollments(currentUser.uid);
-      let remote = [];
-      try {
-        const items = await sheetGet('listApplicants');
-        if (items) remote = items.filter(a => a.uid === currentUser.uid || a.name === currentUser.displayName);
-      } catch (e) {}
-      const byId = {};
-      [...local, ...remote].forEach(item => {
-        if (item.courseId && !byId[item.courseId]) byId[item.courseId] = item;
-      });
-      return Object.values(byId);
-    }
-
-    async function loadApplicants() {
-      try {
-        const items = await sheetGet('listApplicants');
-        if (items) return items;
-      } catch (e) {}
-      return readJson(LS_APPLICANTS, []);
-    }
-
-    async function loadQuestions() {
-      try {
-        const items = await sheetGet('listQuestions');
-        if (items) return items;
-      } catch (e) {}
-      return readJson(LS_QUESTIONS, []);
     }
 
     async function renderMyRoom() {
@@ -1556,7 +1458,7 @@
       const text = document.getElementById('ask-text').value.trim();
       const courseId = document.getElementById('ask-course').value;
       if (!text) { alert('질문 내용을 적어 주세요'); return; }
-      await saveQuestion(currentUser.displayName, courseId, text);
+      await saveQuestion(currentUser.displayName || currentUser.email, courseId, text);
       document.getElementById('ask-text').value = '';
       alert('질문을 보냈습니다. 선생님 페이지에서 확인할 수 있어요.');
       renderMyQuestions();
@@ -1564,10 +1466,10 @@
 
     async function openQuestionModal() {
       if (!currentUser) {
-        const ok = confirm('질문하려면 로그인해야 합니다. 지금 로그인할까요?');
+        const ok = confirm('질문하려면 구글 계정으로 로그인해야 합니다. 지금 로그인할까요?');
         if (!ok) return;
-        openLoginModal();
-        return;
+        const loggedIn = await loginWithGoogle();
+        if (!loggedIn) return;
       }
       const c = COURSES[currentCourseId];
       document.getElementById('q-modal-course').textContent = c.title.replace(/\n/g, ' ');
@@ -1582,7 +1484,7 @@
     async function submitQuestionFromModal() {
       const text = document.getElementById('q-modal-text').value.trim();
       if (!text) { alert('질문 내용을 적어 주세요'); return; }
-      await saveQuestion(currentUser.displayName, currentCourseId, text);
+      await saveQuestion(currentUser.displayName || currentUser.email, currentCourseId, text);
       closeQuestionModal();
       alert('질문을 보냈습니다.');
     }
@@ -1693,15 +1595,6 @@
     document.getElementById('question-modal').addEventListener('click', e => {
       if (e.target.id === 'question-modal') closeQuestionModal();
     });
-    document.getElementById('login-id').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); submitLogin(); }
-    });
-    document.getElementById('login-pw').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); submitLogin(); }
-    });
-    document.getElementById('signup-pw2').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); submitSignup(); }
-    });
 
     /* ── 검색 ── */
     function searchCourses(query) {
@@ -1775,7 +1668,7 @@
 
     renderCourseGrid();
     initSearch();
-    initStorage();
+    initFirebase();
   </script>
 </body>
 </html>
