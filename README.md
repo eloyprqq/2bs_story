@@ -6,15 +6,24 @@
 
 https://eloyprqq.github.io/2bs_story/
 
-## Firebase 설정 (필수)
+## 로컬에서 열기
 
-1. [Firebase Console](https://console.firebase.google.com/) 에서 새 프로젝트 만들기
-2. **Authentication → Sign-in method → Google** 켜기
-3. **Authentication → Settings → Authorized domains** 에 `eloyprqq.github.io` 추가
-4. **Firestore Database** 만들기 (테스트 모드로 시작 가능)
-5. **프로젝트 설정 → 일반 → 내 앱 → 웹 `</>`** 추가 후 `firebaseConfig` 복사
-6. `index.html` 의 `FIREBASE_CONFIG` 에 붙여넣기
-7. GitHub에 push
+`index.html`을 브라우저로 엽니다.
+
+## 구글 시트 연결 (친구들과 데이터 공유)
+
+GitHub Pages만으로는 친구들 신청·질문이 모이지 않습니다. 구글 시트 + Apps Script를 연결하세요.
+
+1. 구글에서 **새 스프레드시트** 만들기
+2. **확장 프로그램 → Apps Script** 열기
+3. `apps-script/Code.gs` 내용을 붙여넣고 저장
+4. **배포 → 새 배포 → 웹 앱**
+   - 실행 계정: **나**
+   - 액세스: **모든 사용자**
+5. 나온 URL을 `index.html`의 `APPS_SCRIPT_URL`에 넣기
+6. GitHub에 push
+
+시트 URL을 넣기 전에도 이 컴퓨터에서 로그인·신청·질문은 쓸 수 있습니다 (브라우저에만 저장).
 
 ## 선생님 시크릿
 
