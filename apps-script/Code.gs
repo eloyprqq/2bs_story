@@ -145,6 +145,32 @@ function doGet(e) {
     return json_({ items: rowsToObjects_(sheet_('applicants', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName'])) });
   }
 
+  if (action === 'deleteQuestion') {
+    return deleteQuestion_(p);
+  }
+
+  if (action === 'deleteApplicant') {
+    return deleteApplicant_(p);
+  }
+
+  if (action === 'answerQuestion') {
+    var ansSh = questionsSheet_();
+    var ansRowNum = p.row ? parseInt(p.row, 10) : findQuestionRow_(ansSh, p.timestamp);
+    if (ansRowNum < 2) return json_({ ok: false, error: 'notfound' });
+    setQuestionField_(ansSh, ansRowNum, 'answer', p.answer || '');
+    setQuestionField_(ansSh, ansRowNum, 'answerDate', p.answerDate || '');
+    setQuestionField_(ansSh, ansRowNum, 'answerRead', '');
+    return json_({ ok: true });
+  }
+
+  if (action === 'markAnswerRead') {
+    var readSh = questionsSheet_();
+    var readRowNum = p.row ? parseInt(p.row, 10) : findQuestionRow_(readSh, p.timestamp);
+    if (readRowNum < 2) return json_({ ok: false, error: 'notfound' });
+    setQuestionField_(readSh, readRowNum, 'answerRead', '1');
+    return json_({ ok: true });
+  }
+
   return json_({ ok: false, error: 'unknown' });
 }
 

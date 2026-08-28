@@ -1363,15 +1363,27 @@
     }
 
     function filterApplicants(list) {
-      return list.filter(a => a.name !== ADMIN_CODE);
+      return list.filter(a => {
+        if (a.name === ADMIN_CODE) return false;
+        if (!String(a.name || '').trim()) return false;
+        if (!String(a.courseId || '').trim()) return false;
+        return true;
+      });
     }
 
-    function deleteApplicantLocal(timestamp) {
-      const list = readJson(LS_APPLICANTS, []);
-      writeJson(LS_APPLICANTS, list.filter(a => aId(a) !== String(timestamp)));
+    async function sheetAdminGet(params) {
+      if (!sheetReady()) return { ok: true };
+      try {
+        const res = await fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(params));
+        const data = await res.json();
+        if (data && data.items && !data.ok) return { ok: false, error: 'unknown' };
+        return data;
+      } catch (e) {
+        return { ok: false };
+      }
     }
 
-    async function sheetAdminAction(payload) {
+    async function sheetAdminPost(payload) {
       if (!sheetReady()) return { ok: true };
       try {
         const res = await fetch(APPS_SCRIPT_URL, {
@@ -1380,7 +1392,9 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) return { ok: false, error: 'http_' + res.status };
-        return await res.json();
+        const data = await res.json();
+        if (data && data.items && !data.ok) return { ok: false, error: 'unknown' };
+        return data;
       } catch (e) {
         return { ok: false };
       }
@@ -1396,61 +1410,56 @@
       if (!input) return;
       const answer = input.value.trim();
       if (!answer) { alert('답변 내용을 적어 주세요'); return; }
-      const patch = {
+      const payload = {
+        action: 'answerQuestion',
+        timestamp,
         answer,
-        answerDate: new Date().toLocaleString('ko-KR'),
-        answerRead: ''
+        answerDate: new Date().toLocaleString('ko-KR')
       };
-      const payload = { action: 'answerQuestion', timestamp, ...patch };
       if (row) payload.row = row;
-      const data = await sheetAdminAction(payload);
+      const data = await sheetAdminGet(payload);
       if (!data || !data.ok) {
-        alert('답변 저장에 실패했어요. Apps Script를 새 버전으로 배포했는지 확인해 주세요.');
+        alert('답변 저장에 실패했어요. Code.gs를 붙여넣고 「배포 → 새 버전」으로 다시 배포해 주세요.');
         return;
       }
       await syncQuestionsFromSheet();
       renderQuestions();
-      alert('답변을 보냈어요. 학생이 새로고침하면 볼 수 있어요.');
     }
 
     async function deleteQuestion(timestamp, row) {
       if (!adminDeleteUnlocked) { alert('먼저 위의 「지우기」 버튼으로 삭제 모드를 켜 주세요'); return; }
-      if (!confirm('이 질문을 삭제할까요?')) return;
       const ts = qId({ timestamp });
       const payload = { action: 'deleteQuestion', timestamp: ts, password: adminDeletePassword };
       if (row) payload.row = row;
-      const data = await sheetAdminAction(payload);
-      if (!data || !data.ok) {
-        alert(data && data.error === 'unknown'
-          ? '삭제 기능이 시트에 없어요. Code.gs를 붙여넣고 새 버전으로 배포해 주세요.'
-          : '삭제에 실패했어요.');
+      const before = (await syncQuestionsFromSheet()).length;
+      const data = await sheetAdminGet(payload);
+      const after = (await syncQuestionsFromSheet()).length;
+      if (!data || !data.ok || after >= before) {
+        alert('질문 삭제에 실패했어요. Code.gs를 붙여넣고 「배포 → 새 버전」으로 다시 배포해 주세요.');
         return;
       }
-      await syncQuestionsFromSheet();
       renderQuestions();
     }
 
     async function deleteApplicant(timestamp, row) {
       if (!adminDeleteUnlocked) { alert('먼저 위의 「지우기」 버튼으로 삭제 모드를 켜 주세요'); return; }
-      if (!confirm('이 신청자를 삭제할까요?')) return;
       const ts = aId({ timestamp });
       const payload = { action: 'deleteApplicant', timestamp: ts, password: adminDeletePassword };
       if (row) payload.row = row;
-      const data = await sheetAdminAction(payload);
-      if (!data || !data.ok) {
-        alert(data && data.error === 'unknown'
-          ? '삭제 기능이 시트에 없어요. Code.gs를 붙여넣고 새 버전으로 배포해 주세요.'
-          : '삭제에 실패했어요.');
+      const before = (await syncApplicantsFromSheet()).length;
+      const data = await sheetAdminGet(payload);
+      const after = (await syncApplicantsFromSheet()).length;
+      if (!data || !data.ok || after >= before) {
+        alert('신청자 삭제에 실패했어요. Code.gs를 붙여넣고 「배포 → 새 버전」으로 다시 배포해 주세요.');
         return;
       }
-      await syncApplicantsFromSheet();
       renderApplicants();
     }
 
     async function markAnswerRead(timestamp, row) {
       const payload = { action: 'markAnswerRead', timestamp };
       if (row) payload.row = row;
-      await sheetAdminAction(payload);
+      await sheetAdminGet(payload);
       await syncQuestionsFromSheet();
       await refreshUnreadAnswers();
       renderMyQuestions();
