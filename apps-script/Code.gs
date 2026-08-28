@@ -93,6 +93,29 @@ function deleteQuestion_(data) {
   return json_({ ok: true });
 }
 
+function findApplicantRow_(sh, timestamp) {
+  var target = normalizeTs_(timestamp);
+  var values = sh.getDataRange().getValues();
+  for (var i = 1; i < values.length; i++) {
+    if (normalizeTs_(values[i][0]) === target) return i + 1;
+  }
+  return -1;
+}
+
+function deleteApplicant_(data) {
+  if (String(data.password || '') !== DELETE_PASSWORD) return json_({ ok: false, error: 'badpass' });
+  var sh = sheet_('applicants', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName']);
+  var rowNum = parseInt(data.row, 10);
+  if (rowNum > 1 && rowNum <= sh.getLastRow()) {
+    sh.deleteRow(rowNum);
+    return json_({ ok: true });
+  }
+  var delRow = findApplicantRow_(sh, data.timestamp);
+  if (delRow < 0) return json_({ ok: false, error: 'notfound' });
+  sh.deleteRow(delRow);
+  return json_({ ok: true });
+}
+
 function doGet(e) {
   var p = (e && e.parameter) || {};
   var action = p.action || 'listApplicants';
@@ -167,6 +190,10 @@ function doPost(e) {
 
   if (data.action === 'deleteQuestion') {
     return deleteQuestion_(data);
+  }
+
+  if (data.action === 'deleteApplicant') {
+    return deleteApplicant_(data);
   }
 
   if (data.action === 'markAnswerRead') {

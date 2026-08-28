@@ -519,6 +519,17 @@
     }
     .admin-btn.answer { background:var(--blue); color:#fff; margin-top:6px; display:block; }
     .admin-btn.delete { background:#fee2e2; color:#dc2626; }
+    .admin-btn.delete.show { display:inline-block; }
+    .admin-delete-toggle {
+      margin-top:16px; padding:10px 18px; border-radius:999px; border:2px solid rgba(255,255,255,0.35);
+      background:rgba(255,255,255,0.12); color:#fff; font-size:14px; font-weight:800;
+      cursor:pointer; font-family:inherit;
+    }
+    .admin-delete-toggle.active { background:#dc2626; border-color:#dc2626; }
+    .admin-delete-hint {
+      display:none; margin-top:10px; font-size:13px; color:#fecaca; font-weight:700;
+    }
+    .admin-delete-hint.show { display:block; }
     .admin-answer-input {
       width:100%; min-width:140px; padding:8px; border:1px solid #e2e8f0;
       border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;
@@ -737,6 +748,8 @@
         <div class="admin-header">
           <h2>👨‍🏫 선생님 전용 — 수강신청 현황</h2>
           <p>신청자와 학생 질문은 구글 시트에 모입니다. 시트를 열면 표로 볼 수 있어요.</p>
+          <button type="button" id="admin-delete-toggle" class="admin-delete-toggle" onclick="toggleAdminDeleteMode()">🗑️ 지우기</button>
+          <p id="admin-delete-hint" class="admin-delete-hint">삭제 모드 — 옆의 「삭제」 버튼을 누르면 지워져요</p>
         </div>
         <div class="admin-stats">
           <div class="stat-card"><strong id="stat-count">—</strong><span>총 신청자</span></div>
@@ -746,7 +759,7 @@
         <div class="admin-filter" id="admin-filter"></div>
         <div class="applicant-table">
           <table>
-            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>신청일시</th></tr></thead>
+            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>신청일시</th><th id="applicant-delete-th" style="display:none">삭제</th></tr></thead>
             <tbody id="applicant-list"></tbody>
           </table>
           <div class="empty-state" id="empty-state" style="display:none">
@@ -756,7 +769,7 @@
         <h3 class="section-title" style="margin:32px 0 16px">학생 질문</h3>
         <div class="applicant-table">
           <table>
-            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>질문</th><th>답변</th><th>일시</th><th>관리</th></tr></thead>
+            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>질문</th><th>답변</th><th>일시</th><th id="question-delete-th" style="display:none">삭제</th></tr></thead>
             <tbody id="question-list"></tbody>
           </table>
           <div class="empty-state" id="empty-questions" style="display:none">
@@ -1067,6 +1080,8 @@
     let adminFilter = 'all';
     let gateConnected = false;
     let unreadByCourse = {};
+    let adminDeleteUnlocked = false;
+    let adminDeletePassword = '';
 
     function sheetReady() {
       return !!(APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('http') === 0);
@@ -1258,7 +1273,7 @@
     async function refreshUnreadAnswers() {
       unreadByCourse = {};
       if (!currentUser) return;
-      const all = await loadQuestions();
+      const all = await syncQuestionsFromSheet();
       const mine = all.filter(q => q.uid === currentUser.uid || q.name === currentUser.displayName);
       mine.forEach(q => {
         if (hasUnreadAnswer(q)) {
@@ -1284,12 +1299,79 @@
       }
     }
 
-    function deleteQuestionLocal(timestamp) {
-      const list = readJson(LS_QUESTIONS, []);
-      writeJson(LS_QUESTIONS, list.filter(q => qId(q) !== String(timestamp)));
+    function aId(a) {
+      const t = a.timestamp;
+      if (typeof t === 'number' && !isNaN(t)) return String(Math.round(t));
+      const s = String(t == null ? '' : t).trim();
+      if (/^\d+(\.\d+)?$/.test(s)) return String(Math.round(parseFloat(s)));
+      return s;
     }
 
-    async function sheetQuestionAction(payload) {
+    function toggleAdminDeleteMode() {
+      if (!adminDeleteUnlocked) {
+        const pw = prompt('삭제 모드를 켜려면 비밀번호를 입력하세요');
+        if (pw === null) return;
+        if (pw !== DELETE_Q_PASSWORD) { alert('비밀번호가 틀려요'); return; }
+        adminDeleteUnlocked = true;
+        adminDeletePassword = pw;
+      } else {
+        adminDeleteUnlocked = false;
+        adminDeletePassword = '';
+      }
+      updateAdminDeleteUI();
+      renderApplicants();
+      renderQuestions();
+    }
+
+    function updateAdminDeleteUI() {
+      const btn = document.getElementById('admin-delete-toggle');
+      const hint = document.getElementById('admin-delete-hint');
+      const appTh = document.getElementById('applicant-delete-th');
+      const qTh = document.getElementById('question-delete-th');
+      if (btn) {
+        btn.textContent = adminDeleteUnlocked ? '삭제 모드 끄기' : '🗑️ 지우기';
+        btn.classList.toggle('active', adminDeleteUnlocked);
+      }
+      if (hint) hint.classList.toggle('show', adminDeleteUnlocked);
+      if (appTh) appTh.style.display = adminDeleteUnlocked ? '' : 'none';
+      if (qTh) qTh.style.display = adminDeleteUnlocked ? '' : 'none';
+    }
+
+    async function syncQuestionsFromSheet() {
+      if (!sheetReady()) return readJson(LS_QUESTIONS, []);
+      try {
+        const items = await sheetGet('listQuestions');
+        if (Array.isArray(items)) {
+          writeJson(LS_QUESTIONS, items);
+          return items;
+        }
+      } catch (e) {}
+      return readJson(LS_QUESTIONS, []);
+    }
+
+    async function syncApplicantsFromSheet() {
+      if (!sheetReady()) return filterApplicants(readJson(LS_APPLICANTS, []));
+      try {
+        const items = await sheetGet('listApplicants');
+        if (Array.isArray(items)) {
+          const filtered = filterApplicants(items);
+          writeJson(LS_APPLICANTS, filtered);
+          return filtered;
+        }
+      } catch (e) {}
+      return filterApplicants(readJson(LS_APPLICANTS, []));
+    }
+
+    function filterApplicants(list) {
+      return list.filter(a => a.name !== ADMIN_CODE);
+    }
+
+    function deleteApplicantLocal(timestamp) {
+      const list = readJson(LS_APPLICANTS, []);
+      writeJson(LS_APPLICANTS, list.filter(a => aId(a) !== String(timestamp)));
+    }
+
+    async function sheetAdminAction(payload) {
       if (!sheetReady()) return { ok: true };
       try {
         const res = await fetch(APPS_SCRIPT_URL, {
@@ -1297,11 +1379,16 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
-        if (!res.ok) return { ok: false };
+        if (!res.ok) return { ok: false, error: 'http_' + res.status };
         return await res.json();
       } catch (e) {
         return { ok: false };
       }
+    }
+
+    function deleteQuestionLocal(timestamp) {
+      const list = readJson(LS_QUESTIONS, []);
+      writeJson(LS_QUESTIONS, list.filter(q => qId(q) !== String(timestamp)));
     }
 
     async function submitAnswer(timestamp, row) {
@@ -1316,41 +1403,55 @@
       };
       const payload = { action: 'answerQuestion', timestamp, ...patch };
       if (row) payload.row = row;
-      updateQuestionLocal(timestamp, patch);
-      const data = await sheetQuestionAction(payload);
-      if (!data || !data.ok) alert('저장에 실패했을 수 있어요. 새로고침 후 확인해 주세요.');
+      const data = await sheetAdminAction(payload);
+      if (!data || !data.ok) {
+        alert('답변 저장에 실패했어요. Apps Script를 새 버전으로 배포했는지 확인해 주세요.');
+        return;
+      }
+      await syncQuestionsFromSheet();
       renderQuestions();
+      alert('답변을 보냈어요. 학생이 새로고침하면 볼 수 있어요.');
     }
 
     async function deleteQuestion(timestamp, row) {
-      const pw = prompt('질문을 삭제하려면 비밀번호를 입력하세요');
-      if (pw === null) return;
-      if (pw !== DELETE_Q_PASSWORD) { alert('비밀번호가 틀려요'); return; }
+      if (!adminDeleteUnlocked) { alert('먼저 위의 「지우기」 버튼으로 삭제 모드를 켜 주세요'); return; }
+      if (!confirm('이 질문을 삭제할까요?')) return;
       const ts = qId({ timestamp });
-      const payload = { action: 'deleteQuestion', timestamp: ts, password: pw };
+      const payload = { action: 'deleteQuestion', timestamp: ts, password: adminDeletePassword };
       if (row) payload.row = row;
-      const data = await sheetQuestionAction(payload);
+      const data = await sheetAdminAction(payload);
       if (!data || !data.ok) {
-        if (data && data.error === 'badpass') alert('비밀번호가 틀려요');
-        else if (data && data.error === 'unknown') {
-          alert('삭제 기능이 시트에 아직 없어요.\n\nApps Script에서 Code.gs를 최신으로 바꾸고\n「배포 → 새 버전」으로 다시 배포해 주세요.');
-        } else {
-          alert('삭제에 실패했어요. Apps Script를 새 버전으로 배포했는지 확인해 주세요.');
-        }
+        alert(data && data.error === 'unknown'
+          ? '삭제 기능이 시트에 없어요. Code.gs를 붙여넣고 새 버전으로 배포해 주세요.'
+          : '삭제에 실패했어요.');
         return;
       }
-      const after = await loadQuestions();
-      if (after.some(q => qId(q) === ts)) {
-        alert('삭제가 시트에 반영되지 않았어요.\n\nCode.gs를 붙여넣고 「배포 → 새 버전」으로 다시 배포해 주세요.');
-        return;
-      }
-      deleteQuestionLocal(ts);
+      await syncQuestionsFromSheet();
       renderQuestions();
     }
 
-    async function markAnswerRead(timestamp) {
-      updateQuestionLocal(timestamp, { answerRead: '1' });
-      await sheetQuestionAction({ action: 'markAnswerRead', timestamp });
+    async function deleteApplicant(timestamp, row) {
+      if (!adminDeleteUnlocked) { alert('먼저 위의 「지우기」 버튼으로 삭제 모드를 켜 주세요'); return; }
+      if (!confirm('이 신청자를 삭제할까요?')) return;
+      const ts = aId({ timestamp });
+      const payload = { action: 'deleteApplicant', timestamp: ts, password: adminDeletePassword };
+      if (row) payload.row = row;
+      const data = await sheetAdminAction(payload);
+      if (!data || !data.ok) {
+        alert(data && data.error === 'unknown'
+          ? '삭제 기능이 시트에 없어요. Code.gs를 붙여넣고 새 버전으로 배포해 주세요.'
+          : '삭제에 실패했어요.');
+        return;
+      }
+      await syncApplicantsFromSheet();
+      renderApplicants();
+    }
+
+    async function markAnswerRead(timestamp, row) {
+      const payload = { action: 'markAnswerRead', timestamp };
+      if (row) payload.row = row;
+      await sheetAdminAction(payload);
+      await syncQuestionsFromSheet();
       await refreshUnreadAnswers();
       renderMyQuestions();
       renderMyRoom();
@@ -1439,7 +1540,11 @@
       }
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById('page-' + id).classList.add('active');
-      if (id === 'admin') { renderApplicants(); renderQuestions(); }
+      if (id === 'admin') {
+        updateAdminDeleteUI();
+        renderApplicants();
+        renderQuestions();
+      }
       if (id === 'room') renderMyRoom();
       if (id === 'home') renderCourseGrid();
       syncNav(id);
@@ -1642,19 +1747,11 @@
     }
 
     async function loadApplicants() {
-      try {
-        const items = await sheetGet('listApplicants');
-        if (items) return items;
-      } catch (e) {}
-      return readJson(LS_APPLICANTS, []);
+      return syncApplicantsFromSheet();
     }
 
     async function loadQuestions() {
-      try {
-        const items = await sheetGet('listQuestions');
-        if (items) return items;
-      } catch (e) {}
-      return readJson(LS_QUESTIONS, []);
+      return syncQuestionsFromSheet();
     }
 
     function readLocalEnrollments(uid) {
@@ -1727,7 +1824,7 @@
     async function renderMyQuestions() {
       const box = document.getElementById('my-questions');
       if (!currentUser) { box.innerHTML = ''; return; }
-      const all = await loadQuestions();
+      const all = await syncQuestionsFromSheet();
       const mine = all.filter(q => q.uid === currentUser.uid || q.name === currentUser.displayName);
       if (mine.length === 0) {
         box.innerHTML = '<p style="font-size:13px;color:var(--text-muted);margin-top:16px">보낸 질문이 아직 없습니다.</p>';
@@ -1736,6 +1833,7 @@
       box.innerHTML = '<div style="font-size:13px;font-weight:800;margin:16px 0 8px">내가 보낸 질문</div>' +
         mine.map(q => {
           const ts = qId(q);
+          const row = q._row || '';
           const unread = hasUnreadAnswer(q);
           let answerBlock = '';
           if (q.answer && String(q.answer).trim()) {
@@ -1743,7 +1841,7 @@
               <div class="q-answer ${unread ? 'new' : ''}">
                 <div class="q-answer-label">선생님 답변 · ${escapeHtml(q.answerDate || '')}</div>
                 <div class="q-answer-body">${escapeHtml(q.answer)}</div>
-                ${unread ? `<button type="button" class="btn-read" onclick="markAnswerRead('${ts}')">확인했어요</button>` : ''}
+                ${unread ? `<button type="button" class="btn-read" onclick="markAnswerRead('${ts}', ${row || 'null'})">확인했어요</button>` : ''}
               </div>`;
           } else {
             answerBlock = '<div class="q-waiting">답변 대기 중...</div>';
@@ -1858,6 +1956,9 @@
             ? `<div class="q-answer-done">${escapeHtml(q.answer)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">${escapeHtml(q.answerDate || '')}</div>`
             : `<textarea class="admin-answer-input" id="ans-${ts}" placeholder="답변을 적어 주세요" rows="2"></textarea>
                <button type="button" class="admin-btn answer" onclick="submitAnswer('${ts}', ${row || 'null'})">답변하기</button>`;
+          const delCell = adminDeleteUnlocked
+            ? `<td><button type="button" class="admin-btn delete show" onclick="deleteQuestion('${ts}', ${row || 'null'})">삭제</button></td>`
+            : '';
           tr.innerHTML = `
             <td>${i + 1}</td>
             <td><span class="course-pill">${escapeHtml(q.courseName || '—')}</span></td>
@@ -1865,7 +1966,7 @@
             <td class="q-cell">${escapeHtml(q.text)}</td>
             <td class="q-cell">${ansBlock}</td>
             <td>${escapeHtml(q.date)}</td>
-            <td><button type="button" class="admin-btn delete" onclick="deleteQuestion('${ts}', ${row || 'null'})">삭제</button></td>`;
+            ${delCell}`;
           tbody.appendChild(tr);
         });
       } catch (e) {
@@ -1890,7 +1991,12 @@
         empty.style.display = 'none';
         list.forEach((a, i) => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${i + 1}</td><td><span class="course-pill">${escapeHtml(a.courseName || '—')}</span></td><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.date)}</td>`;
+          const ts = aId(a);
+          const row = a._row || '';
+          const delCell = adminDeleteUnlocked
+            ? `<td><button type="button" class="admin-btn delete show" onclick="deleteApplicant('${ts}', ${row || 'null'})">삭제</button></td>`
+            : '';
+          tr.innerHTML = `<td>${i + 1}</td><td><span class="course-pill">${escapeHtml(a.courseName || '—')}</span></td><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.date)}</td>${delCell}`;
           tbody.appendChild(tr);
         });
       } catch (e) {
