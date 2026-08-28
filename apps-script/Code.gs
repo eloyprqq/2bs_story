@@ -82,12 +82,17 @@ function setQuestionField_(sh, row, field, value) {
 function deleteQuestion_(data) {
   if (String(data.password || '') !== DELETE_PASSWORD) return json_({ ok: false, error: 'badpass' });
   var sh = questionsSheet_();
+  var target = normalizeTs_(data.timestamp);
+  if (!target) return json_({ ok: false, error: 'notfound' });
   var rowNum = parseInt(data.row, 10);
   if (rowNum > 1 && rowNum <= sh.getLastRow()) {
-    sh.deleteRow(rowNum);
-    return json_({ ok: true });
+    var cellTs = normalizeTs_(sh.getRange(rowNum, 1).getValue());
+    if (cellTs === target) {
+      sh.deleteRow(rowNum);
+      return json_({ ok: true });
+    }
   }
-  var delRow = findQuestionRow_(sh, data.timestamp);
+  var delRow = findQuestionRow_(sh, target);
   if (delRow < 0) return json_({ ok: false, error: 'notfound' });
   sh.deleteRow(delRow);
   return json_({ ok: true });
@@ -105,12 +110,17 @@ function findApplicantRow_(sh, timestamp) {
 function deleteApplicant_(data) {
   if (String(data.password || '') !== DELETE_PASSWORD) return json_({ ok: false, error: 'badpass' });
   var sh = sheet_('applicants', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName']);
+  var target = normalizeTs_(data.timestamp);
+  if (!target) return json_({ ok: false, error: 'notfound' });
   var rowNum = parseInt(data.row, 10);
   if (rowNum > 1 && rowNum <= sh.getLastRow()) {
-    sh.deleteRow(rowNum);
-    return json_({ ok: true });
+    var cellTs = normalizeTs_(sh.getRange(rowNum, 1).getValue());
+    if (cellTs === target) {
+      sh.deleteRow(rowNum);
+      return json_({ ok: true });
+    }
   }
-  var delRow = findApplicantRow_(sh, data.timestamp);
+  var delRow = findApplicantRow_(sh, target);
   if (delRow < 0) return json_({ ok: false, error: 'notfound' });
   sh.deleteRow(delRow);
   return json_({ ok: true });

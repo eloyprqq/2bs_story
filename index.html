@@ -1394,19 +1394,7 @@
       });
     }
 
-    async function sheetAdminGet(params) {
-      if (!sheetReady()) return { ok: true };
-      try {
-        const res = await fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(params));
-        const data = await res.json();
-        if (data && data.items && !data.ok) return { ok: false, error: 'unknown' };
-        return data;
-      } catch (e) {
-        return { ok: false };
-      }
-    }
-
-    async function sheetAdminPost(payload) {
+    async function sheetAdminMutate(payload) {
       if (!sheetReady()) return { ok: true };
       try {
         const res = await fetch(APPS_SCRIPT_URL, {
@@ -1416,10 +1404,17 @@
         });
         if (!res.ok) return { ok: false, error: 'http_' + res.status };
         const data = await res.json();
-        if (data && data.items && !data.ok) return { ok: false, error: 'unknown' };
+        if (data && data.items && data.ok !== true) return { ok: false, error: 'unknown' };
         return data;
       } catch (e) {
-        return { ok: false };
+        try {
+          const res = await fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(payload));
+          const data = await res.json();
+          if (data && data.items && data.ok !== true) return { ok: false, error: 'unknown' };
+          return data;
+        } catch (e2) {
+          return { ok: false };
+        }
       }
     }
 
@@ -1450,41 +1445,43 @@
       paintQuestionsList(list);
 
       const payload = { action: 'answerQuestion', timestamp: ts, ...patch };
-      if (row) payload.row = row;
-      sheetAdminGet(payload).then(data => {
+      sheetAdminMutate(payload).then(data => {
         if (!data || !data.ok) alert('답변 저장에 실패했을 수 있어요. 나중에 새로고침해 확인해 주세요.');
+        else syncQuestionsFromSheet().then(paintQuestionsList);
       });
     }
 
-    async function deleteQuestion(timestamp, row) {
+    async function deleteQuestion(timestamp) {
       if (!adminDeleteUnlocked) { alert('먼저 위의 「지우기」 버튼으로 삭제 모드를 켜 주세요'); return; }
       const ts = qId({ timestamp });
       deleteQuestionLocal(ts);
       paintQuestionsList(getQuestionsLocal());
 
       const payload = { action: 'deleteQuestion', timestamp: ts, password: adminDeletePassword };
-      if (row) payload.row = row;
-      sheetAdminGet(payload).then(data => {
+      sheetAdminMutate(payload).then(data => {
         if (!data || !data.ok) {
-          alert('질문 삭제에 실패했어요. Code.gs를 새 버전으로 배포했는지 확인해 주세요.');
-          syncQuestionsFromSheet().then(paintQuestionsList);
+          const msg = data && data.error === 'badpass' ? '비밀번호가 틀려요. 지우기를 다시 켜 주세요.'
+            : '질문 삭제에 실패했어요. Code.gs를 붙여넣고 「배포 → 새 버전」으로 다시 배포해 주세요.';
+          alert(msg);
         }
+        syncQuestionsFromSheet().then(paintQuestionsList);
       });
     }
 
-    async function deleteApplicant(timestamp, row) {
+    async function deleteApplicant(timestamp) {
       if (!adminDeleteUnlocked) { alert('먼저 위의 「지우기」 버튼으로 삭제 모드를 켜 주세요'); return; }
       const ts = aId({ timestamp });
       deleteApplicantLocal(ts);
       paintApplicantsList(getApplicantsLocal());
 
       const payload = { action: 'deleteApplicant', timestamp: ts, password: adminDeletePassword };
-      if (row) payload.row = row;
-      sheetAdminGet(payload).then(data => {
+      sheetAdminMutate(payload).then(data => {
         if (!data || !data.ok) {
-          alert('신청자 삭제에 실패했어요. Code.gs를 새 버전으로 배포했는지 확인해 주세요.');
-          syncApplicantsFromSheet().then(paintApplicantsList);
+          const msg = data && data.error === 'badpass' ? '비밀번호가 틀려요. 지우기를 다시 켜 주세요.'
+            : '신청자 삭제에 실패했어요. Code.gs를 붙여넣고 「배포 → 새 버전」으로 다시 배포해 주세요.';
+          alert(msg);
         }
+        syncApplicantsFromSheet().then(paintApplicantsList);
       });
     }
 
@@ -1501,8 +1498,7 @@
       }
 
       const payload = { action: 'markAnswerRead', timestamp: ts };
-      if (row) payload.row = row;
-      sheetAdminGet(payload);
+      sheetAdminMutate(payload);
     }
 
     function courseCount() {
@@ -2040,7 +2036,7 @@
           : `<textarea class="admin-answer-input" id="ans-${ts}" placeholder="답변을 적어 주세요" rows="2"></textarea>
              <button type="button" class="admin-btn answer" onclick="submitAnswer('${ts}', ${row || 'null'})">답변하기</button>`;
         const delCell = adminDeleteUnlocked
-          ? `<td><button type="button" class="admin-btn delete show" onclick="deleteQuestion('${ts}', ${row || 'null'})">삭제</button></td>`
+          ? `<td><button type="button" class="admin-btn delete show" onclick="deleteQuestion('${ts}')">삭제</button></td>`
           : '';
         tr.innerHTML = `
           <td>${i + 1}</td>
@@ -2074,7 +2070,7 @@
         const ts = aId(a);
         const row = a._row || '';
         const delCell = adminDeleteUnlocked
-          ? `<td><button type="button" class="admin-btn delete show" onclick="deleteApplicant('${ts}', ${row || 'null'})">삭제</button></td>`
+          ? `<td><button type="button" class="admin-btn delete show" onclick="deleteApplicant('${ts}')">삭제</button></td>`
           : '';
         tr.innerHTML = `<td>${i + 1}</td><td><span class="course-pill">${escapeHtml(a.courseName || '—')}</span></td><td>${escapeHtml(a.name)}</td><td>${escapeHtml(a.date)}</td>${delCell}`;
         tbody.appendChild(tr);
