@@ -1110,6 +1110,21 @@
       document.getElementById('login-modal').classList.remove('show');
     }
 
+    async function sheetAuth(action, username, passHash) {
+      if (!sheetReady()) return null;
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, username, passHash })
+        });
+        if (!res.ok) return { ok: false, error: 'http_' + res.status };
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    }
+
     async function sheetCall(params) {
       if (!sheetReady()) return null;
       const res = await fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(params));
@@ -1127,9 +1142,15 @@
 
       if (sheetReady()) {
         try {
-          const data = await sheetCall({ action: 'signup', username: id, passHash });
+          const data = await sheetAuth('signup', id, passHash);
           if (!data || !data.ok) {
-            showAuthError(data && data.error === 'exists' ? '이미 있는 아이디예요' : '가입에 실패했어요. 시트 주소를 확인해 주세요.');
+            if (data && data.error === 'exists') {
+              showAuthError('이미 있는 아이디예요');
+            } else if (data && String(data.error || '').startsWith('http_403')) {
+              showAuthError('시트 접근이 막혀 있어요. Apps Script 배포에서 액세스를 「모든 사용자」로 바꾸고 새로 배포해 주세요.');
+            } else {
+              showAuthError('가입에 실패했어요. 시트 주소와 배포 설정을 확인해 주세요.');
+            }
             return;
           }
         } catch (e) {
@@ -1153,8 +1174,15 @@
 
       if (sheetReady()) {
         try {
-          const data = await sheetCall({ action: 'login', username: id, passHash });
-          if (!data || !data.ok) { showAuthError('아이디 또는 비밀번호가 틀려요'); return; }
+          const data = await sheetAuth('login', id, passHash);
+          if (!data || !data.ok) {
+            if (data && String(data.error || '').startsWith('http_403')) {
+              showAuthError('시트 접근이 막혀 있어요. Apps Script 배포에서 액세스를 「모든 사용자」로 바꾸고 새로 배포해 주세요.');
+            } else {
+              showAuthError('아이디 또는 비밀번호가 틀려요');
+            }
+            return;
+          }
         } catch (e) {
           showAuthError('로그인에 실패했어요. 시트 주소를 확인해 주세요.');
           return;

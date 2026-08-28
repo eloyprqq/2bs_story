@@ -81,6 +81,25 @@ function doGet(e) {
 
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
+
+  if (data.action === 'signup') {
+    const username = String(data.username || '').trim();
+    const passHash = String(data.passHash || '');
+    if (!username || !passHash) return json_({ ok: false, error: 'missing' });
+    if (findUser_(username)) return json_({ ok: false, error: 'exists' });
+    const sh = sheet_('users', ['username', 'passHash', 'created']);
+    sh.appendRow([username, passHash, new Date().toISOString()]);
+    return json_({ ok: true, username: username });
+  }
+
+  if (data.action === 'login') {
+    const username = String(data.username || '').trim();
+    const passHash = String(data.passHash || '');
+    const user = findUser_(username);
+    if (!user || user.passHash !== passHash) return json_({ ok: false, error: 'bad' });
+    return json_({ ok: true, username: user.username });
+  }
+
   if (data.action === 'question') {
     const sh = sheet_('questions', ['timestamp', 'date', 'name', 'uid', 'courseId', 'courseName', 'text']);
     sh.appendRow([data.timestamp || Date.now(), data.date || '', data.name || '', data.uid || '', data.courseId || '', data.courseName || '', data.text || '']);
