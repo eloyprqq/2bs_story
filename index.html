@@ -17,8 +17,8 @@
       --muted: #666;
       --star: #FFB800;
       --star-empty: #bbb;
-      --frame-w: 920px;
-      --sidebar-w: 168px;
+      --frame-w: 1280px;
+      --sidebar-w: 200px;
       --radius: 18px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -29,12 +29,12 @@
         radial-gradient(circle, rgba(113,201,248,0.35) 1px, transparent 1px);
       background-size:18px 18px;
       display:flex; align-items:flex-start; justify-content:center;
-      padding:20px 12px 32px;
+      padding:16px 12px 24px;
     }
 
     .app {
-      display:flex; width:100%; max-width:var(--frame-w);
-      min-height:560px; aspect-ratio:16/10;
+      display:flex; width:min(var(--frame-w), 96vw);
+      min-height:min(800px, calc(100vh - 32px)); aspect-ratio:16/10;
       background:var(--white); border-radius:4px;
       box-shadow:0 4px 24px rgba(113,201,248,0.25);
     }
@@ -62,7 +62,7 @@
     .main { flex:1; min-width:0; display:flex; flex-direction:column; }
     .screen {
       flex:1; background:var(--blue-inner); border-left:none;
-      padding:14px 18px 20px; position:relative; overflow-y:auto;
+      padding:18px 24px 28px; position:relative; overflow-y:auto;
     }
     .toolbar {
       display:flex; justify-content:space-between; align-items:center;
