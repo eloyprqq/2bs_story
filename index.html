@@ -8,201 +8,205 @@
   <style>
     :root {
       --blue: #71C9F8;
-      --blue-dark: #5BB8E8;
-      --blue-panel: #A8DCFA;
+      --blue-dark: #4BAEE8;
+      --blue-nav: #5BB8E8;
       --blue-inner: #B8E6FA;
-      --blue-field: #C5EBFC;
+      --blue-field: #C8EBFC;
       --white: #fff;
       --text: #333;
-      --muted: #555;
+      --muted: #666;
       --star: #FFB800;
-      --star-empty: #ccc;
+      --star-empty: #bbb;
+      --frame-w: 920px;
       --sidebar-w: 168px;
-      --radius: 22px;
+      --radius: 18px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       font-family:'Noto Sans KR',sans-serif; color:var(--text); min-height:100vh;
-      background-color:#e8f4fc;
+      background-color:#e5f3fb;
       background-image:
-        linear-gradient(rgba(113,201,248,0.22) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(113,201,248,0.22) 1px, transparent 1px);
-      background-size:22px 22px;
+        radial-gradient(circle, rgba(113,201,248,0.35) 1px, transparent 1px);
+      background-size:18px 18px;
+      display:flex; align-items:flex-start; justify-content:center;
+      padding:20px 12px 32px;
     }
 
-    .app { display:flex; min-height:100vh; padding:16px; gap:0; }
+    .app {
+      display:flex; width:100%; max-width:var(--frame-w);
+      min-height:560px; aspect-ratio:16/10;
+      background:var(--white); border-radius:4px;
+      box-shadow:0 4px 24px rgba(113,201,248,0.25);
+    }
 
-    /* ── 사이드바 (mockup) ── */
+    /* ── 사이드바 (~1/5) ── */
     .sidebar {
-      width:var(--sidebar-w); flex-shrink:0; padding:8px 12px 8px 4px;
+      width:var(--sidebar-w); flex-shrink:0; padding:16px 10px 16px 14px;
       border-right:3px solid var(--blue); display:flex; flex-direction:column;
+      background:var(--white);
     }
-    .brand { display:flex; align-items:flex-start; gap:6px; margin-bottom:24px; cursor:pointer; padding-left:4px; }
-    .apple { width:32px; height:32px; flex-shrink:0; }
-    .brand-name { font-size:17px; font-weight:900; line-height:1.2; }
-    .nav { display:flex; flex-direction:column; gap:0; }
+    .brand { display:flex; align-items:center; gap:6px; margin-bottom:20px; cursor:pointer; }
+    .apple { width:28px; height:28px; flex-shrink:0; }
+    .brand-name { font-size:15px; font-weight:900; }
+    .nav { display:flex; flex-direction:column; gap:2px; flex:1; }
     .nav-btn {
-      width:100%; text-align:left; padding:10px 8px; border:none; background:transparent;
-      font-family:inherit; font-size:13px; font-weight:700; color:var(--text); cursor:pointer;
-      border-radius:6px;
+      width:100%; text-align:left; padding:9px 10px; border:none; background:transparent;
+      font-family:inherit; font-size:12.5px; font-weight:700; color:var(--text);
+      cursor:pointer; border-radius:8px;
     }
-    .nav-btn:hover { color:var(--blue-dark); }
-    .nav-btn.active { color:var(--blue-dark); font-weight:900; }
-    .nav-sub { font-size:12px; padding-left:12px; color:var(--muted); }
+    .nav-btn:hover { background:#eef8ff; }
+    .nav-btn.active { background:var(--blue-nav); color:#fff; font-weight:800; }
+    .nav-sub { font-size:11px; padding:2px 10px 8px 18px; color:var(--muted); line-height:1.4; }
 
-    /* ── 메인: 큰 파란 카드 ── */
-    .main { flex:1; min-width:0; }
+    /* ── 메인 (~4/5) ── */
+    .main { flex:1; min-width:0; display:flex; flex-direction:column; }
     .screen {
-      background:var(--blue-inner); border:2px solid var(--blue); border-radius:var(--radius);
-      min-height:calc(100vh - 32px); padding:18px 24px 28px; position:relative;
+      flex:1; background:var(--blue-inner); border-left:none;
+      padding:14px 18px 20px; position:relative; overflow-y:auto;
     }
     .toolbar {
       display:flex; justify-content:space-between; align-items:center;
-      margin-bottom:18px; min-height:32px;
+      margin-bottom:12px; min-height:28px;
     }
     .btn-login {
       background:var(--blue); color:#fff; border:none; border-radius:999px;
-      padding:7px 20px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;
+      padding:6px 18px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;
     }
     .btn-login:hover { background:var(--blue-dark); }
-    .toolbar-right { display:flex; align-items:center; gap:10px; }
-    .user-tag { font-size:12px; font-weight:700; }
+    .toolbar-right { display:flex; align-items:center; gap:8px; }
+    .user-tag { font-size:11px; font-weight:700; }
     .user-tag button {
-      margin-left:6px; border:none; background:rgba(255,255,255,0.6);
-      border-radius:999px; padding:4px 10px; font-size:11px; cursor:pointer; font-family:inherit;
+      margin-left:6px; border:none; background:rgba(255,255,255,0.65);
+      border-radius:999px; padding:3px 9px; font-size:10px; cursor:pointer; font-family:inherit;
     }
 
     .page { display:none; }
     .page.active { display:block; }
 
-    /* 별점 */
-    .stars { font-size:16px; letter-spacing:1px; color:var(--star); }
+    .stars { font-size:15px; letter-spacing:0; color:var(--star); }
     .stars.grey { color:var(--star-empty); }
-    .star-pick { display:inline-flex; gap:2px; font-size:22px; cursor:pointer; }
+    .star-pick { display:inline-flex; gap:2px; font-size:20px; cursor:pointer; }
     .star-pick span { color:var(--star-empty); }
     .star-pick span.on { color:var(--star); }
 
     .btn-pill {
       background:var(--blue); color:#fff; border:none; border-radius:999px;
-      padding:7px 16px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;
+      padding:6px 14px; font-size:10.5px; font-weight:700; cursor:pointer; font-family:inherit;
     }
     .btn-pill:hover { background:var(--blue-dark); }
     .btn-pill.white { background:var(--white); color:var(--blue-dark); border:1.5px solid var(--blue); }
 
-    /* 필드 박스 (mockup 입력칸) */
     .field {
-      background:var(--blue-field); border-radius:12px; padding:14px 16px;
-      margin-bottom:12px; border:1px solid rgba(113,201,248,0.5);
+      background:var(--blue-field); border-radius:10px; padding:12px 14px;
+      margin-bottom:10px; border:1px solid rgba(113,201,248,0.55);
     }
-    .field-label { font-size:12px; font-weight:800; color:var(--blue-dark); margin-bottom:8px; }
-    .field p { font-size:14px; line-height:1.65; white-space:pre-wrap; }
+    .field-label {
+      font-size:15px; font-weight:900; color:var(--text); margin-bottom:8px;
+    }
+    .field-label.sm { font-size:12px; font-weight:800; color:var(--blue-dark); }
+    .field-sub { font-size:11px; color:var(--muted); margin-bottom:8px; }
+    .field p { font-size:13px; line-height:1.6; white-space:pre-wrap; }
     .field textarea, .field input[type=text] {
       width:100%; border:none; background:transparent; font-family:inherit;
-      font-size:14px; resize:vertical; min-height:60px; outline:none;
+      font-size:13px; resize:vertical; min-height:52px; outline:none;
     }
-    .field input[type=text] { min-height:auto; padding:4px 0; }
+    .field input[type=text] { min-height:auto; }
 
-    /* 강의 헤더 */
     .course-banner {
-      display:flex; gap:16px; align-items:center; background:var(--blue);
-      border-radius:14px; padding:18px 20px; color:#fff; margin-bottom:14px;
+      display:flex; gap:14px; align-items:center; background:var(--blue);
+      border-radius:12px; padding:14px 16px; color:#fff; margin-bottom:12px;
     }
     .logo-box {
-      width:72px; height:72px; background:rgba(255,255,255,0.35); border-radius:10px;
-      display:flex; align-items:center; justify-content:center; font-size:11px;
+      width:64px; height:64px; background:rgba(255,255,255,0.32); border-radius:8px;
+      display:flex; align-items:center; justify-content:center; font-size:10px;
       font-weight:700; text-align:center; line-height:1.35; flex-shrink:0;
     }
-    .course-banner h2 { font-size:18px; font-weight:900; }
-    .week-text { font-size:13px; margin-top:6px; opacity:0.95; }
+    .course-banner h2 { font-size:16px; font-weight:900; }
+    .week-text { font-size:12px; margin-top:4px; opacity:0.95; }
 
-    /* 외부 강의 카드 */
-    .ext-list { display:flex; flex-direction:column; gap:14px; }
+    .ext-list { display:flex; flex-direction:column; gap:10px; }
     .ext-card {
-      display:flex; align-items:center; gap:14px; background:var(--blue);
-      border-radius:14px; padding:16px 18px; color:#fff; cursor:pointer;
+      display:flex; align-items:center; gap:12px; background:var(--blue);
+      border-radius:12px; padding:12px 14px; color:#fff;
     }
-    .ext-card .logo-box { width:56px; height:56px; font-size:10px; background:rgba(255,255,255,0.3); }
-    .ext-card h3 { font-size:15px; font-weight:800; flex:1; }
-    .ext-card .stars { font-size:14px; }
-    .ext-card .btn-pill.white { flex-shrink:0; font-size:10px; padding:6px 12px; }
+    .ext-card .logo-box { width:48px; height:48px; font-size:9px; background:rgba(255,255,255,0.28); }
+    .ext-card h3 { font-size:14px; font-weight:800; flex:1; }
+    .ext-card .stars { font-size:13px; margin-right:4px; }
+    .ext-card-actions { display:flex; gap:6px; flex-shrink:0; }
 
-    /* 마이페이지 */
     .profile {
-      background:var(--blue); border-radius:14px; padding:22px 24px; color:#fff; margin-bottom:20px;
+      background:var(--blue); border-radius:12px; padding:18px 20px; color:#fff; margin-bottom:16px;
     }
-    .profile h2 { font-size:20px; font-weight:900; display:inline; }
+    .profile h2 { font-size:18px; font-weight:900; display:inline; }
     .grade-tag {
-      display:inline-block; background:rgba(255,255,255,0.3); padding:4px 12px;
-      border-radius:999px; font-size:12px; font-weight:700; margin-left:8px; vertical-align:middle;
+      display:inline-block; background:rgba(255,255,255,0.28); padding:3px 10px;
+      border-radius:999px; font-size:11px; font-weight:700; margin-left:6px; vertical-align:middle;
     }
-    .profile-note { font-size:13px; margin-top:14px; opacity:0.95; line-height:1.5; }
-    .section-title { font-size:14px; font-weight:900; margin-bottom:12px; }
-    .chip-row { display:flex; gap:10px; flex-wrap:wrap; }
+    .profile-note { font-size:12px; margin-top:12px; opacity:0.95; line-height:1.5; }
+    .section-title { font-size:13px; font-weight:900; margin-bottom:10px; }
+    .chip-row { display:flex; gap:8px; flex-wrap:wrap; }
     .chip {
-      width:64px; height:64px; background:var(--blue); border-radius:10px;
+      width:56px; height:56px; background:var(--blue); border-radius:8px;
       display:flex; align-items:center; justify-content:center; color:#fff;
-      font-size:10px; font-weight:700; text-align:center; cursor:pointer; line-height:1.3;
+      font-size:9px; font-weight:700; text-align:center; cursor:pointer; line-height:1.25;
     }
 
-    /* 숙제 */
     .hw-banner {
-      background:var(--blue); color:#fff; padding:16px 20px; border-radius:12px;
-      font-size:16px; font-weight:800; margin-bottom:24px;
+      background:var(--blue); color:#fff; padding:14px 18px; border-radius:10px;
+      font-size:15px; font-weight:800; margin-bottom:16px;
     }
     .hw-body {
-      font-size:clamp(32px,6vw,48px); font-weight:900; text-align:center;
-      padding:48px 16px; line-height:1.35;
+      font-size:clamp(26px,5vw,38px); font-weight:900; text-align:center;
+      padding:36px 12px; line-height:1.35;
     }
-    .hw-foot { text-align:right; margin-top:20px; }
+    .hw-foot { text-align:right; margin-top:16px; }
 
-    /* 학생 관리 */
     .student-item {
-      display:flex; align-items:center; gap:10px; padding:12px 0;
-      border-bottom:1px solid rgba(113,201,248,0.4); font-size:13px;
+      display:flex; align-items:center; gap:8px; padding:10px 0;
+      border-bottom:1px solid rgba(113,201,248,0.45); font-size:12px;
     }
-    .student-item .no { font-weight:900; width:24px; color:var(--blue-dark); }
-    .student-item .nm { width:80px; font-weight:700; flex-shrink:0; }
+    .student-item .no { font-weight:900; width:20px; color:var(--blue-dark); }
+    .student-item .nm { width:72px; font-weight:700; flex-shrink:0; }
     .student-item .track {
-      flex:1; height:28px; background:var(--blue-field); border-radius:8px;
+      flex:1; height:24px; background:var(--blue-field); border-radius:6px;
       border:1px solid var(--blue); min-width:0;
     }
-    .student-item .btn-pill { font-size:10px; padding:6px 10px; flex-shrink:0; }
+    .student-item .btn-pill { font-size:9px; padding:5px 8px; flex-shrink:0; }
 
-    /* 강의 만들기 */
-    .create-top { display:flex; gap:16px; margin-bottom:12px; align-items:flex-start; }
+    .create-top { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
     .create-logo {
-      width:100px; height:100px; background:var(--blue); border-radius:12px;
+      width:88px; height:88px; background:var(--blue); border-radius:10px;
       display:flex; align-items:center; justify-content:center; color:#fff;
-      font-size:11px; font-weight:700; text-align:center; line-height:1.4; flex-shrink:0;
+      font-size:10px; font-weight:700; text-align:center; line-height:1.35; flex-shrink:0;
     }
     .create-title-in {
       flex:1; background:var(--blue-field); border:1px solid var(--blue);
-      border-radius:12px; padding:14px; font-family:inherit; font-size:15px; font-weight:700;
+      border-radius:10px; padding:12px; font-family:inherit; font-size:14px; font-weight:700;
+      min-height:88px;
     }
-    .create-note { font-size:11px; color:var(--muted); margin-bottom:16px; line-height:1.6; }
-    .create-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
-    .create-grid .field { margin:0; min-height:90px; }
-    .create-foot { text-align:right; }
+    .create-note { font-size:10px; color:var(--muted); margin-bottom:12px; line-height:1.55; }
+    .create-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
+    .create-grid .field { margin:0; min-height:78px; }
+    .create-foot { text-align:right; margin-top:8px; }
     .btn-big {
       background:var(--blue); color:#fff; border:none; border-radius:999px;
-      padding:12px 28px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit;
+      padding:10px 24px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;
     }
 
-    /* 질문 카드 */
     .q-item {
-      background:var(--white); border-radius:12px; padding:16px 18px;
-      margin-bottom:12px; border:1px solid rgba(113,201,248,0.6);
+      background:var(--white); border-radius:10px; padding:14px 16px;
+      margin-bottom:10px; border:1px solid rgba(113,201,248,0.55);
     }
     .q-item .tag { font-size:11px; font-weight:800; color:var(--blue-dark); margin-bottom:6px; }
-    .q-item .body { font-size:14px; line-height:1.55; margin-bottom:10px; white-space:pre-wrap; }
+    .q-item .body { font-size:13px; line-height:1.55; margin-bottom:8px; white-space:pre-wrap; }
     .q-item textarea {
-      width:100%; min-height:64px; padding:10px; border:1px solid var(--blue);
-      border-radius:8px; background:var(--blue-field); font-family:inherit; font-size:13px;
+      width:100%; min-height:56px; padding:10px; border:1px solid var(--blue);
+      border-radius:8px; background:var(--blue-field); font-family:inherit; font-size:12px;
       margin-bottom:8px; resize:vertical;
     }
-    .feed-title { font-size:15px; font-weight:900; margin-bottom:14px; }
+    .feed-title { font-size:14px; font-weight:900; margin-bottom:12px; }
 
-    .empty { text-align:center; padding:48px 16px; color:var(--muted); font-size:14px; line-height:1.8; }
+    .empty { text-align:center; padding:36px 12px; color:var(--muted); font-size:13px; line-height:1.7; }
 
     /* 모달 */
     .overlay {
@@ -236,12 +240,12 @@
     .err { color:#e74c3c; font-size:11px; min-height:16px; margin-bottom:6px; }
 
     @media (max-width:720px) {
-      .app { flex-direction:column; padding:8px; }
-      .sidebar { width:100%; border-right:none; border-bottom:3px solid var(--blue); flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px; padding:8px; }
+      body { padding:8px; }
+      .app { flex-direction:column; aspect-ratio:auto; min-height:auto; max-width:100%; }
+      .sidebar { width:100%; border-right:none; border-bottom:3px solid var(--blue); flex-direction:row; flex-wrap:wrap; align-items:center; gap:6px; padding:10px; }
       .brand { margin-bottom:0; }
       .nav { flex-direction:row; flex-wrap:wrap; }
       .create-grid { grid-template-columns:1fr; }
-      .screen { min-height:auto; padding:14px; }
     }
   </style>
 </head>
@@ -368,8 +372,8 @@
   <script>
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwAYvsUMtk-oRtCqZGRdIw4Y4DsJ4lNH9t_M-VMwR7u0pfDj2GXrStsCNU9GeR7BLrH4g/exec';
     const TEACHER_CODE = '2026';
-    const DATA_VERSION = 'dap-v3';
-    const LS = { user:'dap_user', courses:'dap_courses', enroll:'dap_enroll', questions:'dap_questions', reviews:'dap_reviews', evals:'dap_evals', hwDone:'dap_hw_done' };
+    const DATA_VERSION = 'dap-v4';
+    const LS = { user:'dap_user', accounts:'dap_accounts', courses:'dap_courses', enroll:'dap_enroll', questions:'dap_questions', reviews:'dap_reviews', evals:'dap_evals', hwDone:'dap_hw_done' };
 
     let user = null, authRole = 'student', authMode = 'login';
     let courses = [], enrollments = [], questions = [], reviews = [], evaluations = [];
@@ -378,12 +382,12 @@
     function wipeOldData() {
       Object.keys(localStorage).forEach(k => { if (k.startsWith('2bs_') || k.startsWith('dap_')) localStorage.removeItem(k); });
     }
-    async function serverWipeOnce() {
-      if (!sheetReady() || localStorage.getItem('dap_server_wiped') === DATA_VERSION) return;
-      try { await apiPost({ action:'clearAllData', password:TEACHER_CODE }); localStorage.setItem('dap_server_wiped', DATA_VERSION); } catch(e){}
-    }
+    async function serverWipeOnce() { /* 자동 데이터 삭제 비활성화 */ }
     function initData() {
-      if (localStorage.getItem('dap_version') !== DATA_VERSION) { wipeOldData(); localStorage.setItem('dap_version', DATA_VERSION); }
+      if (localStorage.getItem('dap_version') !== DATA_VERSION) {
+        Object.keys(localStorage).forEach(k => { if (k.startsWith('2bs_')) localStorage.removeItem(k); });
+        localStorage.setItem('dap_version', DATA_VERSION);
+      }
       try { user = JSON.parse(localStorage.getItem(LS.user) || 'null'); } catch(e) { user = null; }
       courses = readLS(LS.courses, []); enrollments = readLS(LS.enroll, []);
       questions = readLS(LS.questions, []); reviews = readLS(LS.reviews, []); evaluations = readLS(LS.evals, []);
@@ -393,16 +397,47 @@
     function sheetReady() { return APPS_SCRIPT_URL.startsWith('http'); }
     async function apiPost(body) {
       if (!sheetReady()) return null;
-      const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
-      return res.ok ? res.json() : { ok:false };
+      try {
+        const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
+        const text = await res.text();
+        try { return JSON.parse(text); } catch(e) { return { ok:false, error: res.ok ? 'badjson' : 'http_'+res.status }; }
+      } catch(e) { return { ok:false, error:'network' }; }
     }
-    async function apiGet(action) {
+    async function apiGet(action, extra) {
       if (!sheetReady()) return null;
-      return (await fetch(APPS_SCRIPT_URL + '?action=' + action)).json();
+      try {
+        const q = new URLSearchParams(Object.assign({ action }, extra || {}));
+        const res = await fetch(APPS_SCRIPT_URL + '?' + q);
+        const text = await res.text();
+        try { return JSON.parse(text); } catch(e) { return { ok:false, error:'badjson' }; }
+      } catch(e) { return { ok:false, error:'network' }; }
+    }
+    async function authRequest(body) {
+      let data = await apiPost(body);
+      if (data && data.ok) return data;
+      data = await apiGet(body.action, {
+        username: body.username, passHash: body.passHash, role: body.role,
+        displayName: body.displayName || '', teacherCode: body.teacherCode || ''
+      });
+      if (data && data.ok) return data;
+      const accounts = readLS(LS.accounts, {});
+      if (body.action === 'signup') {
+        if (accounts[body.username]) return { ok:false, error:'exists' };
+        accounts[body.username] = { passHash: body.passHash, role: body.role || 'student' };
+        writeLS(LS.accounts, accounts);
+        return { ok:true, username:body.username, role:body.role, displayName:body.displayName||body.username, grade: body.role==='teacher'?'선생님':'초급', points:0 };
+      }
+      const acc = accounts[body.username];
+      if (!acc || acc.passHash !== body.passHash) return { ok:false, error:'bad' };
+      if (body.role && acc.role !== body.role) return { ok:false, error:'badrole' };
+      return { ok:true, username:body.username, role:acc.role, displayName:body.displayName||body.username, grade:acc.role==='teacher'?'선생님':'초급', points:0 };
     }
     async function syncAll() {
       if (!sheetReady()) return;
-      const [c,e,q,r,ev] = await Promise.all([apiGet('listCourses'),apiGet('listEnrollments'),apiGet('listQuestions'),apiGet('listReviews'),apiGet('listEvaluations')]);
+      const [c,e,q,r,ev] = await Promise.all([
+        apiGet('listCourses'), apiGet('listEnrollments'),
+        apiGet('listQuestions'), apiGet('listReviews'), apiGet('listEvaluations')
+      ]);
       if (c && c.items) { courses = c.items; writeLS(LS.courses, courses); }
       if (e && e.items) { enrollments = e.items; writeLS(LS.enroll, enrollments); }
       if (q && q.items) { questions = q.items; writeLS(LS.questions, questions); }
@@ -471,9 +506,17 @@
       if (authMode==='signup' && authRole==='teacher' && tc!==TEACHER_CODE) { err.textContent = '선생님 가입 코드가 틀려요'; return; }
       const body = { action: authMode==='signup'?'signup':'login', username:id, passHash: await hashPass(pw), role:authRole, displayName:id };
       if (authMode==='signup' && authRole==='teacher') body.teacherCode = tc;
-      const data = await apiPost(body);
+      const data = await authRequest(body);
       if (!data || !data.ok) {
-        err.textContent = data && data.error==='badrole' ? '계정 종류가 맞지 않아요' : data && data.error==='exists' ? '이미 있는 아이디' : '실패했어요';
+        const msg = {
+          badrole: '학생/선생님 계정 종류가 맞지 않아요',
+          exists: '이미 있는 아이디예요',
+          bad: '아이디 또는 비밀번호가 틀려요',
+          badteacher: '선생님 가입 코드가 틀려요',
+          network: '인터넷 연결을 확인해 주세요',
+          badjson: '서버 오류 — Apps Script를 새로 배포했는지 확인해 주세요'
+        };
+        err.textContent = msg[data && data.error] || (data && String(data.error).startsWith('http_') ? '시트 접근 거부(403) — 배포를 「모든 사용자」로 해 주세요' : '로그인/가입에 실패했어요. 회원가입을 먼저 해 보세요.');
         return;
       }
       user = { uid:'u:'+id, username:id, displayName:data.displayName||id, role:data.role||authRole, grade:data.grade||'초급', points:data.points||0 };
@@ -513,8 +556,9 @@
           <div class="logo-box">(강의<br>로고)</div>
           <h3>${esc(c.title)}</h3>
           ${starsHtml(avg, true)}
-          <button class="btn-pill white" onclick="openReviewsView('${c.id}')">후기 보기</button>
-          ${user && !isTeacher() ? `<button class="btn-pill white" onclick="enrollCourse('${c.id}')">수강</button>` : ''}
+          <div class="ext-card-actions">
+            <button class="btn-pill white" onclick="openReviewsView('${c.id}')">후기 보기</button>
+          </div>
         </div>`;
       }).join('');
     }
@@ -550,14 +594,12 @@
           <div class="logo-box">(강의<br>로고)</div>
           <div><h2>${esc(c.title)}</h2><div class="week-text">현재: ${week}주차 / 최대 ${maxW}주차</div></div>
         </div>
-        <div class="field"><div class="field-label">학습내용 미리보기</div><p>${esc(c.content||c.desc||'')}</p></div>
-        <div class="field"><div class="field-label">준비물</div><p>${esc(c.materials||'없음')}</p></div>
-        <div class="field"><div class="field-label">질문하기</div><textarea id="mine-question" placeholder=""></textarea></div>
-        <div style="text-align:right;margin-bottom:12px"><button class="btn-pill" onclick="submitQuestion('${c.id}')">보내기</button></div>
+        <div class="field"><div class="field-label sm">학습내용 미리보기</div><p>${esc(c.content||c.desc||'')}</p></div>
+        <div class="field"><div class="field-label sm">준비물</div><p>${esc(c.materials||'없음')}</p></div>
+        <div class="field"><div class="field-label">질문하기</div><textarea id="mine-question" placeholder="" onblur="if(this.value.trim())submitQuestion('${c.id}')"></textarea></div>
         ${myQs.map(q=>`<div class="field"><p><b>Q.</b> ${esc(q.text)}${q.answer?`<br><b>A.</b> ${esc(q.answer)}`:''}</p></div>`).join('')}
-        <div class="field"><div class="field-label">평가하기</div><textarea id="mine-eval" placeholder=""></textarea></div>
-        <div style="text-align:right;margin-bottom:12px"><button class="btn-pill" onclick="submitEval('${c.id}')">제출</button></div>
-        <div class="field"><div class="field-label">평가결과</div><p style="font-size:12px;color:var(--muted);margin-bottom:8px">선생님이 공부 태도를 관찰한 결과예요</p>
+        <div class="field"><div class="field-label">평가하기</div><textarea id="mine-eval" placeholder="" onblur="if(this.value.trim())submitEval('${c.id}')"></textarea></div>
+        <div class="field"><div class="field-label">평가결과</div><div class="field-sub">선생님이 공부 태도를 관찰한 결과예요</div>
           ${myEvals.length ? myEvals.map(e=>`<p>${esc(e.text)}${e.teacherReply?`<br><em>선생님: ${esc(e.teacherReply)}</em>`:''}</p>`).join('') : '<p>아직 결과가 없어요.</p>'}
         </div>`;
     }
@@ -585,11 +627,12 @@
       const label = isTeacher() ? '만들어낸 강의' : '수강 중인 강의';
       let note = '';
       if (isTeacher()) {
-        const teacherAvg = courses.filter(c=>c.teacherUid===user.uid).reduce((a,c)=>a+avgRating(c.id),0) / (mine.length||1);
-        const need = Math.max(0, 5 - teacherAvg).toFixed(1);
+        const myC = courses.filter(c => c.teacherUid === user.uid);
+        const teacherAvg = myC.length ? myC.reduce((a,c) => a + avgRating(c.id), 0) / myC.length : 0;
+        const need = Math.max(0, (5 - teacherAvg)).toFixed(1);
         note = `다음 등급까지: (평균 별점) ${need}점 더 얻기`;
       } else {
-        const weeksLeft = Math.max(0, 8 - (myEnrollments()[0]?.currentWeek||1));
+        const weeksLeft = Math.max(0, 8 - (myEnrollments()[0]?.currentWeek || 1));
         note = `다음 등급까지: (${weeksLeft})주차 더 듣기`;
       }
       box.innerHTML = `

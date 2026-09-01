@@ -233,5 +233,10 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  return handlePost_(JSON.parse(e.postData.contents));
+  try {
+    var raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
+    return handlePost_(JSON.parse(raw));
+  } catch (err) {
+    return json_({ ok: false, error: 'badjson' });
+  }
 }
