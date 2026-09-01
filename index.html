@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2BS 프리미엄 강의</title>
+  <title>동아플</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --blue: #2563eb; --blue-light: #dbeafe;
+      --blue: #1565C0; --blue-light: #E3F2FD; --blue-dark: #0D47A1;
       --purple: #7c3aed; --purple-light: #ede9fe;
       --orange: #f97316;
-      --bg: #f0f4ff; --surface: #fff;
+      --bg: #f5f9ff; --surface: #fff;
       --text: #0f172a; --text-muted: #64748b;
       --border: rgba(148,163,184,0.25);
       --shadow-sm: 0 2px 8px rgba(15,23,42,0.06);
@@ -19,6 +19,7 @@
       --shadow-lg: 0 20px 60px rgba(15,23,42,0.14);
       --radius: 16px; --radius-lg: 24px;
       --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+      --sidebar-w: 220px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
@@ -30,57 +31,98 @@
     }
     .site-wrap { position:relative; z-index:1; }
 
-    .top-banner {
-      background: linear-gradient(90deg,#ec4899,#8b5cf6,#3b82f6);
-      background-size:200% 100%; animation:shimmer 6s ease infinite;
-      color:#fff; text-align:center; padding:10px 16px; font-size:13px; font-weight:600;
+    .app-shell { display:flex; min-height:100vh; position:relative; z-index:1; }
+    .sidebar {
+      width:var(--sidebar-w); background:#fff; border-right:1px solid var(--border);
+      padding:28px 16px; flex-shrink:0; position:fixed; top:0; left:0; bottom:0; z-index:50;
+      box-shadow:var(--shadow-sm);
     }
-    @keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
-
-    .utility-bar {
-      background:rgba(255,255,255,0.7); backdrop-filter:blur(8px);
-      border-bottom:1px solid var(--border);
-      padding:8px clamp(16px,4vw,48px);
-      display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
+    .sidebar-brand {
+      display:flex; align-items:center; gap:10px; font-size:22px; font-weight:900;
+      margin-bottom:36px; cursor:pointer; color:var(--blue-dark); letter-spacing:-0.02em;
     }
-    .utility-bar span { cursor:pointer; }
-    .utility-bar span:hover { color:var(--blue); }
-
-    .header-sticky {
-      position:sticky; top:0; z-index:100;
-      background:rgba(255,255,255,0.85); backdrop-filter:blur(16px);
-      border-bottom:1px solid var(--border); box-shadow:var(--shadow-sm);
+    .brand-apple { font-size:28px; line-height:1; }
+    .sidebar-nav { display:flex; flex-direction:column; gap:4px; }
+    .sidebar-link {
+      display:block; width:100%; text-align:left; padding:13px 16px; border:none; background:transparent;
+      border-radius:12px; font-family:inherit; font-size:14px; font-weight:700; color:var(--text-muted);
+      cursor:pointer; transition:background var(--transition), color var(--transition);
     }
-    .header {
-      max-width:1200px; margin:0 auto;
-      padding:18px clamp(16px,4vw,48px);
-      display:flex; align-items:center; gap:20px;
+    .sidebar-link:hover, .sidebar-link.active { background:var(--blue-light); color:var(--blue); }
+    .main-panel { flex:1; margin-left:var(--sidebar-w); min-height:100vh; display:flex; flex-direction:column; }
+    .top-bar {
+      display:flex; justify-content:flex-end; align-items:center; gap:10px;
+      padding:14px clamp(16px,4vw,32px); background:rgba(255,255,255,0.92);
+      border-bottom:1px solid var(--border); position:sticky; top:0; z-index:40;
     }
-    .logo { display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0; transition:transform var(--transition); }
-    .logo:hover { transform:scale(1.02); }
-    .logo-icon {
-      width:46px; height:46px;
-      background:linear-gradient(135deg,var(--blue),var(--purple));
-      border-radius:14px; display:flex; align-items:center; justify-content:center;
-      color:#fff; font-weight:900; font-size:13px;
-      box-shadow:0 4px 14px rgba(37,99,235,0.35); transform:rotate(-3deg);
+    .login-btn-student, .login-btn-teacher {
+      padding:10px 18px; border-radius:999px; font-size:13px; font-weight:700;
+      cursor:pointer; font-family:inherit; border:2px solid transparent; transition:all var(--transition);
     }
-    .logo-text { font-size:22px; font-weight:900; letter-spacing:-0.03em; line-height:1.2; }
-    .logo-text span {
-      background:linear-gradient(135deg,var(--blue),var(--purple));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    .login-btn-student { background:var(--blue); color:#fff; }
+    .login-btn-student:hover { background:var(--blue-dark); }
+    .login-btn-teacher { background:#fff; color:var(--blue); border-color:var(--blue); }
+    .login-btn-teacher:hover { background:var(--blue-light); }
+    .panel-blue {
+      background:var(--blue-light); border-radius:var(--radius-lg); padding:clamp(24px,4vw,36px);
+      margin-bottom:24px;
     }
-    .logo-text small { display:block; font-size:11px; font-weight:600; color:var(--text-muted); -webkit-text-fill-color:var(--text-muted); }
-    .search-wrap {
-      flex:1; max-width:420px; position:relative;
+    .panel-blue h2 { font-size:20px; font-weight:800; margin-bottom:16px; color:var(--blue-dark); }
+    .mypage-profile { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+    .mypage-avatar {
+      width:56px; height:56px; border-radius:50%; background:var(--blue); color:#fff;
+      display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900;
     }
+    .mypage-grade { font-size:13px; color:var(--text-muted); margin-top:4px; }
+    .mypage-courses { display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+    .mypage-course-chip {
+      background:#fff; border-radius:12px; padding:10px 16px; font-size:13px; font-weight:700;
+      border:1px solid var(--border); cursor:pointer;
+    }
+    .homework-box {
+      background:#fff; border-radius:var(--radius); padding:32px; min-height:200px;
+      font-size:18px; font-weight:600; line-height:1.6; margin:20px 0;
+    }
+    .teacher-q-card {
+      background:#fff; border-radius:var(--radius); padding:20px; margin-bottom:16px;
+      border:1px solid rgba(21,101,192,0.15);
+    }
+    .teacher-q-card .q-label { font-size:12px; font-weight:800; color:var(--blue); margin-bottom:8px; }
+    .teacher-q-card .q-text { font-size:15px; line-height:1.5; margin-bottom:14px; white-space:pre-wrap; }
+    .teacher-q-card .q-meta { font-size:12px; color:var(--text-muted); margin-bottom:12px; }
+    .teacher-q-card textarea {
+      width:100%; min-height:80px; padding:12px; border:2px solid #e2e8f0; border-radius:12px;
+      font-family:inherit; font-size:14px; margin-bottom:10px; resize:vertical;
+    }
+    .teacher-q-card .btn-done {
+      background:var(--blue); color:#fff; border:none; border-radius:10px;
+      padding:10px 20px; font-weight:700; cursor:pointer; font-family:inherit;
+    }
+    .teacher-q-card .btn-done:hover { background:var(--blue-dark); }
+    .admin-tabs { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+    .admin-tab-btn {
+      padding:10px 20px; border-radius:999px; border:2px solid var(--border); background:#fff;
+      font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; color:var(--text-muted);
+    }
+    .admin-tab-btn.active { border-color:var(--blue); background:var(--blue-light); color:var(--blue); }
+    .admin-section { display:none; }
+    .admin-section.show { display:block; }
+    .role-badge {
+      display:inline-block; background:var(--blue-light); color:var(--blue);
+      padding:6px 14px; border-radius:999px; font-size:12px; font-weight:800; margin-bottom:12px;
+    }
+    .guest-hint {
+      padding:12px 16px; background:#fff8e1; border-radius:12px; font-size:12px;
+      color:#795548; margin-top:24px; line-height:1.5;
+    }
+    .search-wrap { position:relative; }
     .search-bar {
       display:flex; align-items:center; gap:10px;
-      background:#f8fafc; border:1.5px solid var(--border); border-radius:999px;
+      background:#fff; border:1.5px solid var(--border); border-radius:999px;
       padding:10px 16px 10px 20px; transition:border-color var(--transition), box-shadow var(--transition);
     }
     .search-bar:focus-within {
-      border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,0.1); background:#fff;
+      border-color:var(--blue); box-shadow:0 0 0 4px rgba(21,101,192,0.1);
     }
     .search-bar input {
       flex:1; border:none; background:transparent; outline:none;
@@ -89,9 +131,8 @@
     .search-bar input::placeholder { color:#94a3b8; }
     .search-bar .icon {
       width:32px; height:32px; flex-shrink:0;
-      background:linear-gradient(135deg,var(--blue),var(--purple));
-      border-radius:50%; display:flex; align-items:center; justify-content:center;
-      font-size:14px; cursor:pointer; border:none;
+      background:var(--blue); border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:14px; cursor:pointer; border:none; color:#fff;
     }
     .search-dropdown {
       display:none; position:absolute; top:calc(100% + 8px); left:0; right:0;
@@ -111,7 +152,13 @@
     .search-result .sr-text span { font-size:12px; color:var(--text-muted); }
     .search-empty { padding:24px; text-align:center; color:var(--text-muted); font-size:13px; }
     .search-hint { padding:10px 16px; font-size:11px; color:#94a3b8; border-bottom:1px solid #f1f5f9; }
-    .auth-area { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+    .top-banner { display:none; }
+    @keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+    .utility-bar { display:none; }
+    .header-sticky { display:none; }
+    .auth-area { display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
     .login-btn {
       display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px;
       font-size:13px; font-weight:600; color:var(--text); background:#fff;
@@ -131,21 +178,10 @@
     }
     .logout-btn:hover { background:#fee2e2; color:#dc2626; }
 
-    .nav-bar {
-      max-width:1200px; margin:0 auto;
-      padding:0 clamp(16px,4vw,48px);
-      display:flex; align-items:flex-end; gap:4px;
-    }
-    .nav-tab {
-      padding:12px 24px; font-size:14px; font-weight:700; color:var(--text-muted);
-      background:transparent; border:2px solid transparent; border-bottom:none;
-      border-radius:12px 12px 0 0; position:relative; top:2px; cursor:pointer; font-family:inherit;
-    }
-    .nav-tab.active {
-      color:var(--blue); background:#fff; border-color:var(--blue);
-    }
+    .nav-bar { display:none; }
+    .nav-tab { display:none; }
 
-    .page { display:none; animation:fadeIn 0.35s ease; }
+    .page { display:none; animation:fadeIn 0.35s ease; flex:1; }
     .page.active { display:block; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
@@ -521,13 +557,13 @@
     .admin-btn.delete { background:#fee2e2; color:#dc2626; }
     .admin-btn.delete.show { display:inline-block; }
     .admin-delete-toggle {
-      margin-top:16px; padding:10px 18px; border-radius:999px; border:2px solid rgba(255,255,255,0.35);
-      background:rgba(255,255,255,0.12); color:#fff; font-size:14px; font-weight:800;
+      margin-top:16px; padding:10px 18px; border-radius:999px; border:2px solid var(--border);
+      background:#fff; color:var(--text); font-size:14px; font-weight:800;
       cursor:pointer; font-family:inherit;
     }
-    .admin-delete-toggle.active { background:#dc2626; border-color:#dc2626; }
+    .admin-delete-toggle.active { background:#dc2626; border-color:#dc2626; color:#fff; }
     .admin-delete-hint {
-      display:none; margin-top:10px; font-size:13px; color:#fecaca; font-weight:700;
+      display:none; margin-top:10px; font-size:13px; color:#dc2626; font-weight:700;
     }
     .admin-delete-hint.show { display:block; }
     .admin-answer-input {
@@ -553,8 +589,15 @@
     .login-gate .login-btn { margin:0 auto; }
 
     @media (max-width:768px) {
-      .header { flex-wrap:wrap; }
-      .search-wrap { order:3; max-width:100%; flex:1 1 100%; }
+      .sidebar {
+        position:relative; width:100%; border-right:none; border-bottom:1px solid var(--border);
+        padding:16px;
+      }
+      .main-panel { margin-left:0; }
+      .app-shell { flex-direction:column; }
+      .sidebar-nav { flex-direction:row; flex-wrap:wrap; gap:6px; }
+      .sidebar-link { width:auto; padding:10px 14px; font-size:13px; }
+      .guest-hint { display:none !important; }
       .course-detail-inner { flex-direction:column; }
       .course-detail-right { width:100%; min-height:200px; }
       .course-grid { grid-template-columns:1fr; }
@@ -652,46 +695,43 @@
     시트 URL 없으면 이 컴퓨터에만 저장돼요. 친구들과 같이 쓰려면 `APPS_SCRIPT_URL`에 구글 시트 웹 앱 주소를 넣어 주세요.
   </div>
 
-  <div class="site-wrap">
-    <div class="top-banner">🎉 2BS 프리미엄 강의 — 파이썬 · 수학 · 눈꽃 · 마인크래프트 · 유튜브까지!</div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand" onclick="goHome()">
+        <span class="brand-apple">🍎</span> 동아플
+      </div>
+      <nav class="sidebar-nav" id="sidebar-student">
+        <button type="button" class="sidebar-link" data-page="room" onclick="showPage('room')">나의 강의</button>
+        <button type="button" class="sidebar-link active" data-page="home" onclick="showPage('home')">외부 강의들</button>
+        <button type="button" class="sidebar-link" data-page="mypage" onclick="showPage('mypage')">마이 페이지</button>
+        <button type="button" class="sidebar-link" data-page="homework" onclick="showPage('homework')">숙제</button>
+      </nav>
+      <nav class="sidebar-nav" id="sidebar-teacher" style="display:none">
+        <button type="button" class="sidebar-link" data-page="admin-students" onclick="showTeacherTab('students')">학생 관리</button>
+        <button type="button" class="sidebar-link" data-page="home" onclick="showPage('home')">강의 설정 / 만들기</button>
+        <button type="button" class="sidebar-link" data-page="mypage" onclick="showPage('mypage')">마이 페이지</button>
+        <button type="button" class="sidebar-link" data-page="admin-questions" onclick="showTeacherTab('questions')">질문 / 평가 보기</button>
+      </nav>
+      <div class="guest-hint" id="guest-hint">로그인하면 나의 강의와 숙제를 볼 수 있어요.</div>
+    </aside>
 
-    <div class="utility-bar">
-      <div><span>처음이신가요?</span> · <span>강의 한눈에 보기</span></div>
-      <div><span>고객센터</span> · <span>공지사항</span> · <span>이벤트</span></div>
-    </div>
-
-    <div class="header-sticky">
-      <div class="header">
-        <div class="logo" onclick="showPage('home')">
-          <div class="logo-icon">2BS</div>
-          <div class="logo-text"><span>2BS</span> 프리미엄 강의<small>PREMIUM EDUCATION</small></div>
-        </div>
-        <div class="search-wrap">
-          <div class="search-bar">
-            <input type="text" id="search-input" placeholder="강좌 검색 (예: 파이썬, 수학, 눈꽃, 마크)" autocomplete="off">
-            <button type="button" class="icon" onclick="doSearch()" aria-label="검색">🔍</button>
-          </div>
-          <div class="search-dropdown" id="search-dropdown"></div>
-        </div>
+    <div class="main-panel">
+      <header class="top-bar">
         <div class="auth-area" id="auth-area"></div>
-      </div>
-      <div class="nav-bar">
-        <button type="button" class="nav-tab active" id="tab-home" onclick="showPage('home')">강의들</button>
-        <button type="button" class="nav-tab" id="tab-room" onclick="showPage('room')">나의 학습방</button>
-      </div>
-    </div>
+      </header>
 
-    <!-- HOME -->
+    <!-- HOME (외부 강의들) -->
     <div id="page-home" class="page active">
       <div class="container">
-        <div class="hero-banner">
-          <div class="hero-badge"><span class="dot"></span> LIVE 수강 모집 중</div>
-          <h2>2BS 프리미엄 강의</h2>
-          <p>코딩부터 게임까지! 친구들과 함께 배우는 2BS만의 특별 수업</p>
-          <div class="hero-stats">
-            <div class="hero-stat"><strong id="hero-course-count">—</strong><span>개설 강의</span></div>
-            <div class="hero-stat"><strong>100%</strong><span>재미 보장</span></div>
-            <div class="hero-stat"><strong>2BS</strong><span>프리미엄</span></div>
+        <div class="panel-blue">
+          <h2>외부 강의들</h2>
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:8px">관심 있는 강의를 눌러 자세히 보고, 학습방에 담아 보세요.</p>
+          <div class="search-wrap" style="max-width:420px;margin-top:12px">
+            <div class="search-bar">
+              <input type="text" id="search-input" placeholder="강좌 검색 (예: 파이썬, 수학)" autocomplete="off">
+              <button type="button" class="icon" onclick="doSearch()" aria-label="검색">🔍</button>
+            </div>
+            <div class="search-dropdown" id="search-dropdown"></div>
           </div>
         </div>
         <div class="section-header">
@@ -714,25 +754,28 @@
       </div>
     </div>
 
-    <!-- MY ROOM -->
+    <!-- MY ROOM (나의 강의) -->
     <div id="page-room" class="page">
       <div class="container">
-        <div class="section-header">
-          <div class="section-title">나의 학습방</div>
-          <span class="section-count" id="room-count"></span>
+        <div class="panel-blue">
+          <h2>나의 강의</h2>
+          <p style="font-size:14px;color:var(--text-muted)">학습방에 담은 강의를 모아서 볼 수 있어요.</p>
         </div>
         <div id="room-gate" class="login-gate" style="display:none">
           <h2>로그인이 필요해요</h2>
-          <p>나의 학습방에 담은 강의를 보려면<br>로그인하거나 회원가입 해 주세요.</p>
-          <button type="button" class="login-btn" onclick="openLoginModal()">👤 로그인</button>
+          <p>나의 강의를 보려면 학생 계정으로 로그인해 주세요.</p>
+          <button type="button" class="login-btn-student" onclick="openLoginModal('student')">학생 로그인</button>
+        </div>
+        <div class="section-header">
+          <span class="section-count" id="room-count"></span>
         </div>
         <div class="course-grid" id="room-grid"></div>
         <div class="empty-state" id="room-empty" style="display:none">
-          <div class="emoji">📚</div>아직 담은 강의가 없습니다. 강의 목록에서 학습방에 담아보세요.
+          <div class="emoji">📚</div>아직 담은 강의가 없습니다. 외부 강의들에서 학습방에 담아보세요.
         </div>
         <div class="ask-panel" id="room-ask" style="display:none">
           <h3>선생님께 질문하기</h3>
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">질문은 구글 시트에 저장되고, 선생님 페이지에서 볼 수 있어요.</p>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">질문은 선생님 페이지에서 확인할 수 있어요.</p>
           <select id="ask-course"></select>
           <textarea id="ask-text" placeholder="궁금한 점을 적어 주세요"></textarea>
           <button type="button" class="btn-submit" style="width:auto;padding:12px 24px" onclick="submitQuestion()">질문 보내기</button>
@@ -741,45 +784,76 @@
       </div>
     </div>
 
-    <!-- ADMIN -->
+    <!-- MY PAGE -->
+    <div id="page-mypage" class="page">
+      <div class="container">
+        <div class="panel-blue" id="mypage-content">
+          <h2>마이 페이지</h2>
+          <p style="color:var(--text-muted)">로그인하면 내 정보를 볼 수 있어요.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOMEWORK -->
+    <div id="page-homework" class="page">
+      <div class="container">
+        <div class="panel-blue">
+          <h2 id="homework-title">숙제</h2>
+          <p id="homework-course-label" style="font-size:14px;color:var(--text-muted);margin-bottom:12px"></p>
+          <div class="homework-box" id="homework-content">등록된 숙제가 없습니다.</div>
+          <button type="button" class="btn-primary" id="homework-done-btn" style="display:none" onclick="markHomeworkDone()">완료로 표시</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN (선생님) -->
     <div id="page-admin" class="page">
-      <div class="admin-page">
-        <div class="back-link" onclick="showPage('home')">← 강의 목록으로</div>
-        <div class="admin-header">
-          <h2>👨‍🏫 선생님 전용 — 수강신청 현황</h2>
-          <p>신청자와 학생 질문은 구글 시트에 모입니다. 시트를 열면 표로 볼 수 있어요.</p>
+      <div class="admin-page container">
+        <div class="panel-blue">
+          <h2>👨‍🏫 선생님 페이지</h2>
+          <p style="font-size:14px;color:var(--text-muted)">학생 관리와 질문 답변을 할 수 있어요.</p>
           <button type="button" id="admin-delete-toggle" class="admin-delete-toggle" onclick="toggleAdminDeleteMode()">🗑️ 지우기</button>
-          <p id="admin-delete-hint" class="admin-delete-hint">삭제 모드 — 옆의 「삭제」 버튼을 누르면 지워져요</p>
+          <p id="admin-delete-hint" class="admin-delete-hint">삭제 모드 — 「삭제」 버튼을 누르면 지워져요</p>
         </div>
         <div class="admin-stats">
           <div class="stat-card"><strong id="stat-count">—</strong><span>총 신청자</span></div>
           <div class="stat-card"><strong id="stat-q-count">—</strong><span>질문</span></div>
           <div class="stat-card"><strong id="stat-course-count">—</strong><span>개설 강의</span></div>
         </div>
-        <div class="admin-filter" id="admin-filter"></div>
-        <div class="applicant-table">
-          <table>
-            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>신청일시</th><th id="applicant-delete-th" style="display:none">삭제</th></tr></thead>
-            <tbody id="applicant-list"></tbody>
-          </table>
-          <div class="empty-state" id="empty-state" style="display:none">
-            <div class="emoji">📭</div>아직 수강신청한 사람이 없습니다.
+        <div class="admin-tabs">
+          <button type="button" class="admin-tab-btn active" id="admin-tab-students" onclick="showAdminSection('students')">학생 관리</button>
+          <button type="button" class="admin-tab-btn" id="admin-tab-questions" onclick="showAdminSection('questions')">질문 / 평가 보기</button>
+        </div>
+        <div id="admin-section-students" class="admin-section show">
+          <div class="admin-filter" id="admin-filter"></div>
+          <div class="applicant-table">
+            <table>
+              <thead><tr><th>#</th><th>강의</th><th>이름</th><th>신청일시</th><th id="applicant-delete-th" style="display:none">삭제</th></tr></thead>
+              <tbody id="applicant-list"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state" style="display:none">
+              <div class="emoji">📭</div>아직 수강신청한 사람이 없습니다.
+            </div>
           </div>
         </div>
-        <h3 class="section-title" style="margin:32px 0 16px">학생 질문</h3>
-        <div class="applicant-table">
-          <table>
-            <thead><tr><th>#</th><th>강의</th><th>이름</th><th>질문</th><th>답변</th><th>일시</th><th id="question-delete-th" style="display:none">삭제</th></tr></thead>
-            <tbody id="question-list"></tbody>
-          </table>
-          <div class="empty-state" id="empty-questions" style="display:none">
-            <div class="emoji">💬</div>아직 질문이 없습니다.
+        <div id="admin-section-questions" class="admin-section">
+          <h3 class="section-title" style="margin-bottom:16px">온 질문들</h3>
+          <div id="teacher-q-cards"></div>
+          <div class="applicant-table" style="margin-top:24px">
+            <table>
+              <thead><tr><th>#</th><th>강의</th><th>이름</th><th>질문</th><th>답변</th><th>일시</th><th id="question-delete-th" style="display:none">삭제</th></tr></thead>
+              <tbody id="question-list"></tbody>
+            </table>
+            <div class="empty-state" id="empty-questions" style="display:none">
+              <div class="emoji">💬</div>아직 질문이 없습니다.
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="footer"><strong>2BS 프리미엄 강의</strong>© 2026 2BS Education.</div>
+    <div class="footer"><strong>동아플</strong> © 2026</div>
+    </div>
   </div>
 
   <!-- ENROLL MODAL -->
@@ -824,8 +898,9 @@
   <div class="modal-overlay" id="login-modal">
     <div class="modal">
       <div class="modal-header">
+        <div class="role-badge" id="auth-role-label">학생 계정</div>
         <h2 id="auth-title">로그인</h2>
-        <p>아이디와 비밀번호로 들어가요</p>
+        <p id="auth-subtitle">아이디와 비밀번호로 들어가요</p>
       </div>
       <div class="modal-body">
         <div class="auth-tabs">
@@ -859,6 +934,10 @@
           <div class="form-group">
             <label for="signup-pw2">비밀번호 확인</label>
             <input type="password" id="signup-pw2" placeholder="한 번 더 입력" maxlength="40" autocomplete="new-password">
+          </div>
+          <div class="form-group" id="teacher-signup-fields" style="display:none">
+            <label for="signup-teacher-code">선생님 가입 코드</label>
+            <input type="password" id="signup-teacher-code" placeholder="선생님만 알고 있는 코드" maxlength="20">
           </div>
           <div class="modal-actions">
             <button class="btn-cancel" onclick="closeLoginModal()">취소</button>
@@ -1074,8 +1153,11 @@
     const LS_QUESTIONS = '2bs_questions';
     const LS_ACCOUNTS = '2bs_accounts';
     const DELETE_Q_PASSWORD = '2026';
+    const TEACHER_SIGNUP_CODE = '2026';
 
     let currentUser = null;
+    let pendingAuthRole = 'student';
+    let adminTab = 'students';
     let currentCourseId = 'python';
     let adminFilter = 'all';
     let gateConnected = false;
@@ -1103,6 +1185,125 @@
       writeJson(LS_APPLICANTS, cacheApplicants);
     }
 
+    function isTeacher() {
+      return currentUser && currentUser.role === 'teacher';
+    }
+
+    function isStudent() {
+      return currentUser && currentUser.role !== 'teacher';
+    }
+
+    function goHome() {
+      if (isTeacher()) showPage('home');
+      else showPage('home');
+    }
+
+    function applyRoleUI() {
+      const studentNav = document.getElementById('sidebar-student');
+      const teacherNav = document.getElementById('sidebar-teacher');
+      const guestHint = document.getElementById('guest-hint');
+      if (isTeacher()) {
+        studentNav.style.display = 'none';
+        teacherNav.style.display = 'flex';
+        if (guestHint) guestHint.style.display = 'none';
+      } else {
+        studentNav.style.display = 'flex';
+        teacherNav.style.display = 'none';
+        if (guestHint) guestHint.style.display = currentUser ? 'none' : 'block';
+      }
+    }
+
+    function showAdminSection(section) {
+      adminTab = section;
+      document.getElementById('admin-tab-students').classList.toggle('active', section === 'students');
+      document.getElementById('admin-tab-questions').classList.toggle('active', section === 'questions');
+      document.getElementById('admin-section-students').classList.toggle('show', section === 'students');
+      document.getElementById('admin-section-questions').classList.toggle('show', section === 'questions');
+      syncNav('admin-' + section);
+    }
+
+    function showTeacherTab(section) {
+      if (!currentUser) { openLoginModal('teacher'); return; }
+      if (!isTeacher()) { alert('선생님 계정으로 로그인해 주세요.'); return; }
+      showPage('admin');
+      showAdminSection(section);
+    }
+
+    function renderMypage() {
+      const el = document.getElementById('mypage-content');
+      if (!el) return;
+      if (!currentUser) {
+        el.innerHTML = `<h2>마이 페이지</h2><p style="color:var(--text-muted)">로그인하면 내 정보를 볼 수 있어요.</p>
+          <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="login-btn-student" onclick="openLoginModal('student')">학생 로그인</button>
+            <button type="button" class="login-btn-teacher" onclick="openLoginModal('teacher')">선생님 로그인</button>
+          </div>`;
+        return;
+      }
+      const name = escapeHtml(currentUser.displayName);
+      const roleLabel = isTeacher() ? '선생님' : '학생';
+      const enrolls = getMyEnrollments();
+      const courseChips = enrolls.length
+        ? enrolls.map(id => {
+            const c = COURSES[id];
+            return c ? `<button type="button" class="mypage-course-chip" onclick="openCourse('${id}')">${escapeHtml(c.shortTitle)}</button>` : '';
+          }).join('')
+        : '<span style="color:var(--text-muted);font-size:13px">아직 수강 중인 강의가 없어요.</span>';
+      const createdLabel = isTeacher() ? '만든 강의' : '수강 중인 강의';
+      el.innerHTML = `
+        <div class="mypage-profile">
+          <div class="mypage-avatar">${name.slice(0, 1)}</div>
+          <div>
+            <div style="font-size:20px;font-weight:900">${name}</div>
+            <div class="mypage-grade">${roleLabel} · 다음 등급까지 120점</div>
+          </div>
+        </div>
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:8px">${createdLabel}</h3>
+        <div class="mypage-courses">${courseChips}</div>`;
+    }
+
+    function renderHomework() {
+      const titleEl = document.getElementById('homework-title');
+      const labelEl = document.getElementById('homework-course-label');
+      const contentEl = document.getElementById('homework-content');
+      const doneBtn = document.getElementById('homework-done-btn');
+      if (!currentUser || isTeacher()) {
+        titleEl.textContent = '숙제';
+        labelEl.textContent = '';
+        contentEl.textContent = isTeacher() ? '학생 전용 페이지예요.' : '학생 계정으로 로그인하면 숙제를 볼 수 있어요.';
+        doneBtn.style.display = 'none';
+        return;
+      }
+      const enrolls = getMyEnrollments();
+      if (enrolls.length === 0) {
+        labelEl.textContent = '';
+        contentEl.textContent = '수강 중인 강의가 없어요. 외부 강의들에서 먼저 담아 주세요.';
+        doneBtn.style.display = 'none';
+        return;
+      }
+      const cid = enrolls[0];
+      const c = COURSES[cid];
+      labelEl.textContent = c ? c.title.replace(/\n/g, ' ') : '';
+      const hwKey = '2bs_hw_done_' + currentUser.uid + '_' + cid;
+      const done = localStorage.getItem(hwKey) === '1';
+      contentEl.textContent = done ? '숙제를 완료했어요! 🎉' : (c ? c.shortTitle + ' — 이번 주 숙제: 강의 내용 복습하고 질문 1개 적어 보기' : '등록된 숙제가 없습니다.');
+      doneBtn.style.display = done ? 'none' : 'block';
+      doneBtn.dataset.hwKey = hwKey;
+    }
+
+    function markHomeworkDone() {
+      const btn = document.getElementById('homework-done-btn');
+      if (btn && btn.dataset.hwKey) {
+        localStorage.setItem(btn.dataset.hwKey, '1');
+        renderHomework();
+      }
+    }
+
+    function getMyEnrollments() {
+      if (!currentUser) return [];
+      return readLocalEnrollments(currentUser.uid).map(x => x.courseId);
+    }
+
     function sheetReady() {
       return !!(APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf('http') === 0);
     }
@@ -1119,6 +1320,8 @@
       document.getElementById('panel-login').classList.toggle('show', tab === 'login');
       document.getElementById('panel-signup').classList.toggle('show', tab === 'signup');
       document.getElementById('auth-title').textContent = tab === 'login' ? '로그인' : '회원가입';
+      document.getElementById('teacher-signup-fields').style.display =
+        (tab === 'signup' && pendingAuthRole === 'teacher') ? 'block' : 'none';
       showAuthError('');
     }
 
@@ -1129,22 +1332,35 @@
     }
 
     function setSession(user) {
-      currentUser = user;
-      localStorage.setItem(LS_USER, JSON.stringify(user));
+      const role = user.role || pendingAuthRole || 'student';
+      currentUser = { uid: user.uid, displayName: user.displayName, role };
+      localStorage.setItem(LS_USER, JSON.stringify(currentUser));
       closeLoginModal();
+      applyRoleUI();
       renderAuth();
       renderCourseGrid();
-      if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
+      renderMypage();
+      if (role === 'teacher') {
+        showPage('admin');
+        showAdminSection('questions');
+      } else {
+        showPage('room');
+      }
     }
 
     function initStorage() {
       if (!sheetReady()) document.getElementById('setup-banner').classList.add('show');
       try {
         const saved = JSON.parse(localStorage.getItem(LS_USER) || 'null');
-        if (saved && saved.displayName) currentUser = saved;
+        if (saved && saved.displayName) {
+          currentUser = saved;
+          if (!currentUser.role) currentUser.role = 'student';
+        }
       } catch (e) {}
+      applyRoleUI();
       renderAuth();
       renderCourseGrid();
+      renderMypage();
     }
 
     function renderAuth() {
@@ -1152,20 +1368,30 @@
       if (!el) return;
       if (currentUser) {
         const name = escapeHtml(currentUser.displayName);
+        const roleTag = isTeacher() ? '선생님' : '학생';
         el.innerHTML = `
+          <span style="font-size:12px;font-weight:700;color:var(--text-muted)">${roleTag}</span>
           <div class="user-chip">
             <span class="teacher-avatar" style="width:28px;height:28px">${name.slice(0,1)}</span>
             <span>${name}</span>
             <button type="button" class="logout-btn" onclick="logoutLocal()">로그아웃</button>
           </div>`;
       } else {
-        el.innerHTML = `<button type="button" class="login-btn" onclick="openLoginModal()">👤 로그인</button>`;
+        el.innerHTML = `
+          <button type="button" class="login-btn-student" onclick="openLoginModal('student')">학생 로그인</button>
+          <button type="button" class="login-btn-teacher" onclick="openLoginModal('teacher')">선생님 로그인</button>`;
       }
     }
 
-    function openLoginModal() {
+    function openLoginModal(role) {
+      pendingAuthRole = role || 'student';
+      const isTeacherRole = pendingAuthRole === 'teacher';
+      document.getElementById('auth-role-label').textContent = isTeacherRole ? '선생님 계정' : '학생 계정';
+      document.getElementById('auth-subtitle').textContent = isTeacherRole
+        ? '선생님 아이디로 로그인하세요'
+        : '학생 아이디로 로그인하세요';
       showAuthTab('login');
-      ['login-id','login-pw','signup-id','signup-pw','signup-pw2'].forEach(id => {
+      ['login-id','login-pw','signup-id','signup-pw','signup-pw2','signup-teacher-code'].forEach(id => {
         const n = document.getElementById(id);
         if (n) n.value = '';
       });
@@ -1177,13 +1403,16 @@
       document.getElementById('login-modal').classList.remove('show');
     }
 
-    async function sheetAuth(action, username, passHash) {
+    async function sheetAuth(action, username, passHash, extra) {
       if (!sheetReady()) return null;
+      const payload = Object.assign({
+        action, username, passHash, role: pendingAuthRole
+      }, extra || {});
       try {
         const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action, username, passHash })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) return { ok: false, error: 'http_' + res.status };
         return await res.json();
@@ -1202,17 +1431,24 @@
       const id = document.getElementById('signup-id').value.trim();
       const pw = document.getElementById('signup-pw').value;
       const pw2 = document.getElementById('signup-pw2').value;
+      const teacherCode = document.getElementById('signup-teacher-code').value;
       if (id.length < 2) { showAuthError('아이디는 2글자 이상이어야 해요'); return; }
       if (pw.length < 4) { showAuthError('비밀번호는 4글자 이상이어야 해요'); return; }
       if (pw !== pw2) { showAuthError('비밀번호가 서로 달라요'); return; }
+      if (pendingAuthRole === 'teacher' && teacherCode !== TEACHER_SIGNUP_CODE) {
+        showAuthError('선생님 가입 코드가 맞지 않아요'); return;
+      }
       const passHash = await hashPass(pw);
+      const role = pendingAuthRole;
 
       if (sheetReady()) {
         try {
-          const data = await sheetAuth('signup', id, passHash);
+          const data = await sheetAuth('signup', id, passHash, { teacherCode });
           if (!data || !data.ok) {
             if (data && data.error === 'exists') {
               showAuthError('이미 있는 아이디예요');
+            } else if (data && data.error === 'badteacher') {
+              showAuthError('선생님 가입 코드가 맞지 않아요');
             } else if (data && String(data.error || '').startsWith('http_403')) {
               showAuthError('시트 접근이 막혀 있어요. Apps Script 배포에서 액세스를 「모든 사용자」로 바꾸고 새로 배포해 주세요.');
             } else {
@@ -1220,6 +1456,8 @@
             }
             return;
           }
+          setSession({ uid: 'u:' + id, displayName: id, role: data.role || role });
+          return;
         } catch (e) {
           showAuthError('가입에 실패했어요. 인터넷과 시트 주소를 확인해 주세요.');
           return;
@@ -1227,10 +1465,10 @@
       } else {
         const accounts = readJson(LS_ACCOUNTS, {});
         if (accounts[id]) { showAuthError('이미 있는 아이디예요'); return; }
-        accounts[id] = passHash;
+        accounts[id] = { passHash, role };
         writeJson(LS_ACCOUNTS, accounts);
       }
-      setSession({ uid: 'u:' + id, displayName: id });
+      setSession({ uid: 'u:' + id, displayName: id, role });
     }
 
     async function submitLogin() {
@@ -1238,39 +1476,53 @@
       const pw = document.getElementById('login-pw').value;
       if (!id || !pw) { showAuthError('아이디와 비밀번호를 입력하세요'); return; }
       const passHash = await hashPass(pw);
+      const role = pendingAuthRole;
 
       if (sheetReady()) {
         try {
           const data = await sheetAuth('login', id, passHash);
           if (!data || !data.ok) {
-            if (data && String(data.error || '').startsWith('http_403')) {
+            if (data && data.error === 'badrole') {
+              showAuthError(pendingAuthRole === 'teacher' ? '선생님 계정이 아니에요. 학생 로그인을 이용해 주세요.' : '학생 계정이 아니에요. 선생님 로그인을 이용해 주세요.');
+            } else if (data && String(data.error || '').startsWith('http_403')) {
               showAuthError('시트 접근이 막혀 있어요. Apps Script 배포에서 액세스를 「모든 사용자」로 바꾸고 새로 배포해 주세요.');
             } else {
               showAuthError('아이디 또는 비밀번호가 틀려요');
             }
             return;
           }
+          setSession({ uid: 'u:' + id, displayName: id, role: data.role || role });
+          return;
         } catch (e) {
           showAuthError('로그인에 실패했어요. 시트 주소를 확인해 주세요.');
           return;
         }
       } else {
         const accounts = readJson(LS_ACCOUNTS, {});
-        if (!accounts[id] || accounts[id] !== passHash) {
+        const acc = accounts[id];
+        const storedHash = acc && (typeof acc === 'string' ? acc : acc.passHash);
+        const storedRole = acc && typeof acc === 'object' ? (acc.role || 'student') : 'student';
+        if (!storedHash || storedHash !== passHash) {
           showAuthError('아이디 또는 비밀번호가 틀려요');
           return;
         }
+        if (storedRole !== role) {
+          showAuthError(role === 'teacher' ? '선생님 계정이 아니에요.' : '학생 계정이 아니에요.');
+          return;
+        }
       }
-      setSession({ uid: 'u:' + id, displayName: id });
+      setSession({ uid: 'u:' + id, displayName: id, role });
     }
 
     function logoutLocal() {
       currentUser = null;
       unreadByCourse = {};
       localStorage.removeItem(LS_USER);
+      applyRoleUI();
       renderAuth();
       renderCourseGrid();
-      if (document.getElementById('page-room').classList.contains('active')) renderMyRoom();
+      renderMypage();
+      showPage('home');
     }
 
     function qId(q) {
@@ -1344,6 +1596,7 @@
       }
       updateAdminDeleteUI();
       paintQuestionsList(getQuestionsLocal());
+      paintTeacherQuestionCards(getQuestionsLocal());
       paintApplicantsList(getApplicantsLocal());
     }
 
@@ -1433,6 +1686,10 @@
       if (!input) return;
       const answer = input.value.trim();
       if (!answer) { alert('답변 내용을 적어 주세요'); return; }
+      await saveAnswer(timestamp, row, answer);
+    }
+
+    async function saveAnswer(timestamp, row, answer) {
       const patch = {
         answer,
         answerDate: new Date().toLocaleString('ko-KR'),
@@ -1443,11 +1700,12 @@
       const list = getQuestionsLocal().map(q => qId(q) === ts ? { ...q, ...patch } : q);
       setQuestionsCache(list);
       paintQuestionsList(list);
+      paintTeacherQuestionCards(list);
 
-      const payload = { action: 'answerQuestion', timestamp: ts, ...patch };
+      const payload = { action: 'answerQuestion', timestamp: ts, row, ...patch };
       sheetAdminMutate(payload).then(data => {
         if (!data || !data.ok) alert('답변 저장에 실패했을 수 있어요. 나중에 새로고침해 확인해 주세요.');
-        else syncQuestionsFromSheet().then(paintQuestionsList);
+        else syncQuestionsFromSheet().then(q => { paintQuestionsList(q); paintTeacherQuestionCards(q); });
       });
     }
 
@@ -1456,6 +1714,7 @@
       const ts = qId({ timestamp });
       deleteQuestionLocal(ts);
       paintQuestionsList(getQuestionsLocal());
+      paintTeacherQuestionCards(getQuestionsLocal());
 
       const payload = { action: 'deleteQuestion', timestamp: ts, password: adminDeletePassword };
       sheetAdminMutate(payload).then(data => {
@@ -1588,31 +1847,65 @@
       if (id === 'room' && !currentUser) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page-room').classList.add('active');
-        renderMyRoom();
+        document.getElementById('room-gate').style.display = 'block';
         syncNav('room');
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (id === 'room' && isTeacher()) {
+        alert('학생 전용 페이지예요.');
+        return;
+      }
+      if (id === 'homework' && (!currentUser || isTeacher())) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-homework').classList.add('active');
+        renderHomework();
+        syncNav('homework');
+        return;
+      }
+      if (id === 'admin') {
+        if (!currentUser) { openLoginModal('teacher'); return; }
+        if (!isTeacher()) { alert('선생님 계정으로 로그인해 주세요.'); return; }
+      }
+      if ((id === 'mypage' || id === 'homework') && !currentUser) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + id).classList.add('active');
+        if (id === 'mypage') renderMypage();
+        if (id === 'homework') renderHomework();
+        syncNav(id);
         return;
       }
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById('page-' + id).classList.add('active');
       if (id === 'admin') {
         updateAdminDeleteUI();
+        showAdminSection(adminTab);
         paintQuestionsList(getQuestionsLocal());
+        paintTeacherQuestionCards(getQuestionsLocal());
         paintApplicantsList(getApplicantsLocal());
         Promise.all([syncQuestionsFromSheet(), syncApplicantsFromSheet()]).then(([q, a]) => {
           paintQuestionsList(q);
+          paintTeacherQuestionCards(q);
           paintApplicantsList(a);
         });
       }
-      if (id === 'room') renderMyRoom();
+      if (id === 'room') {
+        document.getElementById('room-gate').style.display = 'none';
+        renderMyRoom();
+      }
       if (id === 'home') renderCourseGrid();
+      if (id === 'mypage') renderMypage();
+      if (id === 'homework') renderHomework();
       syncNav(id);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function syncNav(id) {
-      document.getElementById('tab-home').classList.toggle('active', id === 'home' || id === 'course' || id === 'admin');
-      document.getElementById('tab-room').classList.toggle('active', id === 'room');
+      const navId = id === 'admin' ? 'admin-' + adminTab : id;
+      document.querySelectorAll('.sidebar-link').forEach(btn => {
+        const page = btn.getAttribute('data-page');
+        btn.classList.toggle('active', page === navId || (navId === 'course' && page === 'home'));
+      });
     }
 
     function getTerms(course) {
@@ -1627,7 +1920,7 @@
       if (!currentUser) {
         const ok = confirm('학습방에 담으려면 로그인해야 합니다. 지금 로그인할까요?');
         if (!ok) return;
-        openLoginModal();
+        openLoginModal('student');
         return;
       }
       const c = COURSES[currentCourseId];
@@ -1939,7 +2232,7 @@
     }
 
     async function submitQuestion() {
-      if (!currentUser) { openLoginModal(); return; }
+      if (!currentUser) { openLoginModal('student'); return; }
       const text = document.getElementById('ask-text').value.trim();
       const courseId = document.getElementById('ask-course').value;
       if (!text) { alert('질문 내용을 적어 주세요'); return; }
@@ -1952,7 +2245,7 @@
       if (!currentUser) {
         const ok = confirm('질문하려면 로그인해야 합니다. 지금 로그인할까요?');
         if (!ok) return;
-        openLoginModal();
+        openLoginModal('student');
         return;
       }
       const c = COURSES[currentCourseId];
@@ -1977,7 +2270,13 @@
       closeEnrollModal();
 
       if (name === ADMIN_CODE) {
-        showPage('admin');
+        pendingAuthRole = 'teacher';
+        if (isTeacher()) {
+          showPage('admin');
+          showAdminSection('students');
+        } else {
+          openLoginModal('teacher');
+        }
         return;
       }
 
@@ -2013,7 +2312,46 @@
       adminFilter = id;
       renderAdminFilter();
       paintQuestionsList(getQuestionsLocal());
+      paintTeacherQuestionCards(getQuestionsLocal());
       paintApplicantsList(getApplicantsLocal());
+    }
+
+    function paintTeacherQuestionCards(list) {
+      const box = document.getElementById('teacher-q-cards');
+      if (!box) return;
+      if (adminFilter !== 'all') list = list.filter(q => q.courseId === adminFilter);
+      if (list.length === 0) {
+        box.innerHTML = '<p style="color:var(--text-muted);font-size:14px">아직 질문이 없습니다.</p>';
+        return;
+      }
+      box.innerHTML = list.map(q => {
+        const ts = qId(q);
+        const row = q._row || '';
+        const hasAns = q.answer && String(q.answer).trim();
+        const answerPart = hasAns
+          ? `<div class="q-label">(대답)</div><div class="q-text">${escapeHtml(q.answer)}</div>
+             <div class="q-meta">${escapeHtml(q.answerDate || '')}</div>`
+          : `<div class="q-label">(대답 입력)</div>
+             <textarea id="card-ans-${ts}" placeholder="답변을 적어 주세요"></textarea>
+             <button type="button" class="btn-done" onclick="submitAnswerFromCard('${ts}', ${row || 'null'})">완료로 표시</button>`;
+        const delBtn = adminDeleteUnlocked
+          ? `<button type="button" class="admin-btn delete show" style="margin-top:10px" onclick="deleteQuestion('${ts}')">삭제</button>`
+          : '';
+        return `<div class="teacher-q-card">
+          <div class="q-meta">${escapeHtml(q.courseName || '')} · ${escapeHtml(q.name)} · ${escapeHtml(q.date || '')}</div>
+          <div class="q-label">(질문)</div>
+          <div class="q-text">${escapeHtml(q.text || '')}</div>
+          ${answerPart}
+          ${delBtn}
+        </div>`;
+      }).join('');
+    }
+
+    async function submitAnswerFromCard(ts, row) {
+      const ta = document.getElementById('card-ans-' + ts);
+      const text = ta ? ta.value.trim() : '';
+      if (!text) { alert('답변을 적어 주세요'); return; }
+      await saveAnswer(ts, row, text);
     }
 
     function paintQuestionsList(list) {

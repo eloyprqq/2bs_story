@@ -53,15 +53,41 @@ function rowsToObjects_(sh) {
   return items;
 }
 
+var USER_HEADERS = ['username', 'passHash', 'created', 'role'];
+var TEACHER_SIGNUP_CODE = '2026';
+
 function findUser_(username) {
-  var sh = sheet_('users', ['username', 'passHash', 'created']);
+  var sh = sheet_('users', USER_HEADERS);
   var values = sh.getDataRange().getValues();
   for (var i = 1; i < values.length; i++) {
     if (String(values[i][0]) === String(username)) {
-      return { username: String(values[i][0]), passHash: String(values[i][1]) };
+      return {
+        username: String(values[i][0]),
+        passHash: String(values[i][1]),
+        role: String(values[i][3] || 'student')
+      };
     }
   }
   return null;
+}
+
+function signupUser_(username, passHash, role, teacherCode) {
+  if (!username || !passHash) return json_({ ok: false, error: 'missing' });
+  if (findUser_(username)) return json_({ ok: false, error: 'exists' });
+  role = String(role || 'student');
+  if (role === 'teacher' && String(teacherCode || '') !== TEACHER_SIGNUP_CODE) {
+    return json_({ ok: false, error: 'badteacher' });
+  }
+  if (role !== 'teacher') role = 'student';
+  sheet_('users', USER_HEADERS).appendRow([username, passHash, new Date().toISOString(), role]);
+  return json_({ ok: true, username: username, role: role });
+}
+
+function loginUser_(username, passHash, role) {
+  var user = findUser_(username);
+  if (!user || user.passHash !== passHash) return json_({ ok: false, error: 'bad' });
+  if (role && String(role) !== user.role) return json_({ ok: false, error: 'badrole' });
+  return json_({ ok: true, username: user.username, role: user.role });
 }
 
 function findQuestionRow_(sh, timestamp) {
@@ -131,20 +157,20 @@ function doGet(e) {
   var action = p.action || 'listApplicants';
 
   if (action === 'signup') {
-    var username = String(p.username || '').trim();
-    var passHash = String(p.passHash || '');
-    if (!username || !passHash) return json_({ ok: false, error: 'missing' });
-    if (findUser_(username)) return json_({ ok: false, error: 'exists' });
-    sheet_('users', ['username', 'passHash', 'created']).appendRow([username, passHash, new Date().toISOString()]);
-    return json_({ ok: true, username: username });
+    return signupUser_(
+      String(p.username || '').trim(),
+      String(p.passHash || ''),
+      p.role,
+      p.teacherCode
+    );
   }
 
   if (action === 'login') {
-    var loginName = String(p.username || '').trim();
-    var loginHash = String(p.passHash || '');
-    var user = findUser_(loginName);
-    if (!user || user.passHash !== loginHash) return json_({ ok: false, error: 'bad' });
-    return json_({ ok: true, username: user.username });
+    return loginUser_(
+      String(p.username || '').trim(),
+      String(p.passHash || ''),
+      p.role
+    );
   }
 
   if (action === 'listQuestions') {
@@ -188,20 +214,20 @@ function doPost(e) {
   var data = JSON.parse(e.postData.contents);
 
   if (data.action === 'signup') {
-    var suName = String(data.username || '').trim();
-    var suHash = String(data.passHash || '');
-    if (!suName || !suHash) return json_({ ok: false, error: 'missing' });
-    if (findUser_(suName)) return json_({ ok: false, error: 'exists' });
-    sheet_('users', ['username', 'passHash', 'created']).appendRow([suName, suHash, new Date().toISOString()]);
-    return json_({ ok: true, username: suName });
+    return signupUser_(
+      String(data.username || '').trim(),
+      String(data.passHash || ''),
+      data.role,
+      data.teacherCode
+    );
   }
 
   if (data.action === 'login') {
-    var liName = String(data.username || '').trim();
-    var liHash = String(data.passHash || '');
-    var liUser = findUser_(liName);
-    if (!liUser || liUser.passHash !== liHash) return json_({ ok: false, error: 'bad' });
-    return json_({ ok: true, username: liUser.username });
+    return loginUser_(
+      String(data.username || '').trim(),
+      String(data.passHash || ''),
+      data.role
+    );
   }
 
   if (data.action === 'question') {
