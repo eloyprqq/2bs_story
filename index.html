@@ -7,190 +7,224 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --blue: #71C9F8;
+      --blue: #7EC8F5;
       --blue-dark: #4BAEE8;
-      --blue-nav: #5BB8E8;
+      --blue-nav: #A8D8F8;
       --blue-inner: #B8E6FA;
-      --blue-field: #C8EBFC;
+      --blue-field: #C5E8FA;
       --white: #fff;
-      --text: #333;
-      --muted: #666;
+      --text: #222;
+      --muted: #888;
       --star: #FFB800;
-      --star-empty: #bbb;
-      --frame-w: 1280px;
-      --sidebar-w: 200px;
+      --star-empty: #c4c4c4;
+      --sidebar-w: 26%;
       --radius: 18px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
       font-family:'Noto Sans KR',sans-serif; color:var(--text); min-height:100vh;
-      background-color:#e5f3fb;
-      background-image:
-        radial-gradient(circle, rgba(113,201,248,0.35) 1px, transparent 1px);
-      background-size:18px 18px;
-      display:flex; align-items:flex-start; justify-content:center;
-      padding:16px 12px 24px;
+      background-color:#fff;
+      background-image: radial-gradient(circle, #cfcfcf 1.15px, transparent 1.15px);
+      background-size:16px 16px;
     }
 
     .app {
-      display:flex; width:min(var(--frame-w), 96vw);
-      min-height:min(800px, calc(100vh - 32px)); aspect-ratio:16/10;
-      background:var(--white); border-radius:4px;
-      box-shadow:0 4px 24px rgba(113,201,248,0.25);
+      display:flex; width:100%; min-height:100vh;
     }
 
-    /* ── 사이드바 (~1/5) ── */
+    /* ── 사이드바 (~25%) ── */
     .sidebar {
-      width:var(--sidebar-w); flex-shrink:0; padding:16px 10px 16px 14px;
-      border-right:3px solid var(--blue); display:flex; flex-direction:column;
-      background:var(--white);
+      width:var(--sidebar-w); min-width:260px; max-width:380px; flex-shrink:0; padding:32px 28px 32px 36px;
+      border-right:6px solid var(--blue); display:flex; flex-direction:column;
+      background:transparent;
     }
-    .brand { display:flex; align-items:center; gap:6px; margin-bottom:20px; cursor:pointer; }
-    .apple { width:28px; height:28px; flex-shrink:0; }
-    .brand-name { font-size:15px; font-weight:900; }
-    .nav { display:flex; flex-direction:column; gap:2px; flex:1; }
+    .brand { margin-bottom:36px; cursor:pointer; user-select:none; }
+    .brand-sub { font-size:13px; font-weight:500; color:#444; margin-bottom:2px; }
+    .brand-row { display:flex; align-items:center; gap:10px; }
+    .apple { width:42px; height:42px; flex-shrink:0; }
+    .brand-name { font-size:32px; font-weight:900; letter-spacing:-0.5px; line-height:1.1; }
+    .nav { display:flex; flex-direction:column; gap:10px; flex:1; }
     .nav-btn {
-      width:100%; text-align:left; padding:9px 10px; border:none; background:transparent;
-      font-family:inherit; font-size:12.5px; font-weight:700; color:var(--text);
-      cursor:pointer; border-radius:8px;
+      width:100%; text-align:left; padding:12px 18px; border:none; background:transparent;
+      font-family:inherit; font-size:17px; font-weight:800; color:var(--text);
+      cursor:pointer; border-radius:16px;
     }
     .nav-btn:hover { background:#eef8ff; }
-    .nav-btn.active { background:var(--blue-nav); color:#fff; font-weight:800; }
-    .nav-sub { font-size:11px; padding:2px 10px 8px 18px; color:var(--muted); line-height:1.4; }
+    .nav-btn.active { background:var(--blue-nav); color:var(--text); }
+    .nav-sub { font-size:13px; padding:0 18px 8px 22px; color:var(--muted); line-height:1.4; }
 
-    /* ── 메인 (~4/5) ── */
+    /* ── 메인 (~75%) ── */
     .main { flex:1; min-width:0; display:flex; flex-direction:column; }
     .screen {
-      flex:1; background:var(--blue-inner); border-left:none;
-      padding:18px 24px 28px; position:relative; overflow-y:auto;
+      flex:1; background:transparent;
+      padding:28px 56px 48px; position:relative; overflow-y:auto;
     }
     .toolbar {
-      display:flex; justify-content:space-between; align-items:center;
-      margin-bottom:12px; min-height:28px;
+      display:grid; grid-template-columns:1fr auto 1fr;
+      align-items:center; margin-bottom:22px; min-height:42px; gap:12px;
     }
+    .toolbar-center {
+      display:flex; align-items:center; gap:10px;
+      font-size:16px; font-weight:800;
+    }
+    .toolbar-right { display:flex; align-items:center; gap:10px; justify-self:end; }
     .btn-login {
       background:var(--blue); color:#fff; border:none; border-radius:999px;
-      padding:6px 18px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;
+      padding:8px 22px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
     }
     .btn-login:hover { background:var(--blue-dark); }
-    .toolbar-right { display:flex; align-items:center; gap:8px; }
-    .user-tag { font-size:11px; font-weight:700; }
+    .user-tag { font-size:14px; font-weight:700; }
     .user-tag button {
-      margin-left:6px; border:none; background:rgba(255,255,255,0.65);
-      border-radius:999px; padding:3px 9px; font-size:10px; cursor:pointer; font-family:inherit;
+      margin-left:8px; border:none; background:var(--blue); color:#fff;
+      border-radius:999px; padding:6px 14px; font-size:12px; cursor:pointer; font-family:inherit;
     }
 
     .page { display:none; }
     .page.active { display:block; }
 
-    .stars { font-size:15px; letter-spacing:0; color:var(--star); }
+    .stars { font-size:22px; letter-spacing:2px; color:var(--star); line-height:1; }
     .stars.grey { color:var(--star-empty); }
-    .star-pick { display:inline-flex; gap:2px; font-size:20px; cursor:pointer; }
+    .star-pick { display:inline-flex; gap:2px; font-size:24px; cursor:pointer; }
     .star-pick span { color:var(--star-empty); }
     .star-pick span.on { color:var(--star); }
 
     .btn-pill {
       background:var(--blue); color:#fff; border:none; border-radius:999px;
-      padding:6px 14px; font-size:10.5px; font-weight:700; cursor:pointer; font-family:inherit;
+      padding:8px 18px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
     }
     .btn-pill:hover { background:var(--blue-dark); }
     .btn-pill.white { background:var(--white); color:var(--blue-dark); border:1.5px solid var(--blue); }
 
     .field {
-      background:var(--blue-field); border-radius:10px; padding:12px 14px;
-      margin-bottom:10px; border:1px solid rgba(113,201,248,0.55);
+      background:var(--blue-field); border-radius:16px; padding:14px 18px;
+      margin-bottom:12px; border:none;
     }
     .field-label {
-      font-size:15px; font-weight:900; color:var(--text); margin-bottom:8px;
+      font-size:18px; font-weight:900; color:var(--text); margin-bottom:4px;
     }
-    .field-label.sm { font-size:12px; font-weight:800; color:var(--blue-dark); }
-    .field-sub { font-size:11px; color:var(--muted); margin-bottom:8px; }
-    .field p { font-size:13px; line-height:1.6; white-space:pre-wrap; }
+    .field-label.sm { font-size:14px; font-weight:800; color:var(--text); }
+    .field-sub { font-size:13px; color:var(--muted); margin-bottom:10px; }
+    .field p { font-size:15px; line-height:1.6; white-space:pre-wrap; }
     .field textarea, .field input[type=text] {
       width:100%; border:none; background:transparent; font-family:inherit;
-      font-size:13px; resize:vertical; min-height:52px; outline:none;
+      font-size:15px; resize:vertical; min-height:44px; outline:none;
     }
     .field input[type=text] { min-height:auto; }
 
+    .course-hero {
+      display:flex; gap:16px; align-items:stretch; margin-bottom:22px;
+    }
+    .hero-logo {
+      width:150px; min-height:100px; background:var(--blue); border-radius:26px;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:18px; font-weight:800; text-align:center; flex-shrink:0;
+    }
+    .hero-title {
+      flex:1; background:var(--blue); border-radius:26px; min-height:100px;
+      display:flex; align-items:center; padding:18px 32px;
+      color:#fff; font-size:32px; font-weight:900;
+    }
+    .info-lines { font-size:16px; font-weight:700; line-height:1.9; margin-bottom:28px; }
+    .action-block { margin-bottom:22px; }
+    .action-block h3 { font-size:20px; font-weight:900; margin-bottom:2px; }
+    .action-block .hint { font-size:13px; color:var(--muted); margin-bottom:10px; }
+    .blue-bar {
+      width:100%; min-height:52px; background:var(--blue); border:none; border-radius:22px;
+      padding:14px 20px; font-family:inherit; font-size:15px; color:#fff;
+      resize:vertical; outline:none;
+    }
+    .blue-bar::placeholder { color:rgba(255,255,255,0.75); }
+    .blue-bar-static {
+      width:100%; min-height:52px; background:var(--blue); border-radius:22px;
+      padding:14px 20px; color:#fff; font-size:15px; line-height:1.55; white-space:pre-wrap;
+    }
+
     .course-banner {
-      display:flex; gap:14px; align-items:center; background:var(--blue);
-      border-radius:12px; padding:14px 16px; color:#fff; margin-bottom:12px;
+      display:flex; gap:16px; align-items:center; margin-bottom:18px;
     }
     .logo-box {
-      width:64px; height:64px; background:rgba(255,255,255,0.32); border-radius:8px;
-      display:flex; align-items:center; justify-content:center; font-size:10px;
-      font-weight:700; text-align:center; line-height:1.35; flex-shrink:0;
+      width:150px; height:100px; background:var(--blue); border-radius:26px;
+      display:flex; align-items:center; justify-content:center; font-size:18px;
+      font-weight:800; text-align:center; line-height:1.35; flex-shrink:0; color:#fff;
     }
-    .course-banner h2 { font-size:16px; font-weight:900; }
-    .week-text { font-size:12px; margin-top:4px; opacity:0.95; }
+    .course-banner h2 {
+      flex:1; background:var(--blue); border-radius:26px; min-height:100px;
+      display:flex; align-items:center; padding:18px 32px;
+      color:#fff; font-size:32px; font-weight:900;
+    }
+    .week-text { font-size:16px; font-weight:700; margin:8px 0 16px; }
 
-    .ext-list { display:flex; flex-direction:column; gap:10px; }
+    .ext-list { display:flex; flex-direction:column; gap:14px; }
     .ext-card {
-      display:flex; align-items:center; gap:12px; background:var(--blue);
-      border-radius:12px; padding:12px 14px; color:#fff;
+      display:flex; align-items:center; gap:16px;
     }
-    .ext-card .logo-box { width:48px; height:48px; font-size:9px; background:rgba(255,255,255,0.28); }
-    .ext-card h3 { font-size:14px; font-weight:800; flex:1; }
-    .ext-card .stars { font-size:13px; margin-right:4px; }
-    .ext-card-actions { display:flex; gap:6px; flex-shrink:0; }
+    .ext-card .logo-box { width:100px; height:72px; font-size:14px; }
+    .ext-card h3 {
+      flex:1; background:var(--blue); border-radius:22px; min-height:72px;
+      display:flex; align-items:center; padding:12px 24px;
+      color:#fff; font-size:22px; font-weight:800;
+    }
+    .ext-card .stars { font-size:20px; margin-right:8px; }
+    .ext-card-actions { display:flex; gap:8px; flex-shrink:0; }
 
     .profile {
-      background:var(--blue); border-radius:12px; padding:18px 20px; color:#fff; margin-bottom:16px;
+      background:var(--blue); border-radius:22px; padding:24px 28px; color:#fff; margin-bottom:20px;
     }
-    .profile h2 { font-size:18px; font-weight:900; display:inline; }
+    .profile h2 { font-size:24px; font-weight:900; display:inline; }
     .grade-tag {
-      display:inline-block; background:rgba(255,255,255,0.28); padding:3px 10px;
-      border-radius:999px; font-size:11px; font-weight:700; margin-left:6px; vertical-align:middle;
+      display:inline-block; background:rgba(255,255,255,0.28); padding:4px 12px;
+      border-radius:999px; font-size:13px; font-weight:700; margin-left:8px; vertical-align:middle;
     }
-    .profile-note { font-size:12px; margin-top:12px; opacity:0.95; line-height:1.5; }
-    .section-title { font-size:13px; font-weight:900; margin-bottom:10px; }
-    .chip-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .profile-note { font-size:14px; margin-top:14px; opacity:0.95; line-height:1.5; }
+    .section-title { font-size:16px; font-weight:900; margin-bottom:12px; }
+    .chip-row { display:flex; gap:10px; flex-wrap:wrap; }
     .chip {
-      width:56px; height:56px; background:var(--blue); border-radius:8px;
+      width:88px; height:72px; background:var(--blue); border-radius:16px;
       display:flex; align-items:center; justify-content:center; color:#fff;
-      font-size:9px; font-weight:700; text-align:center; cursor:pointer; line-height:1.25;
+      font-size:13px; font-weight:700; text-align:center; cursor:pointer; line-height:1.25;
     }
 
     .hw-banner {
-      background:var(--blue); color:#fff; padding:14px 18px; border-radius:10px;
-      font-size:15px; font-weight:800; margin-bottom:16px;
+      background:var(--blue); color:#fff; padding:18px 24px; border-radius:22px;
+      font-size:22px; font-weight:800; margin-bottom:20px;
     }
     .hw-body {
-      font-size:clamp(26px,5vw,38px); font-weight:900; text-align:center;
-      padding:36px 12px; line-height:1.35;
+      font-size:clamp(28px,4vw,42px); font-weight:900; text-align:center;
+      padding:48px 16px; line-height:1.35;
     }
     .hw-foot { text-align:right; margin-top:16px; }
 
     .student-item {
-      display:flex; align-items:center; gap:8px; padding:10px 0;
-      border-bottom:1px solid rgba(113,201,248,0.45); font-size:12px;
+      display:flex; align-items:center; gap:10px; padding:12px 0;
+      border-bottom:1px solid rgba(126,200,245,0.45); font-size:15px;
     }
-    .student-item .no { font-weight:900; width:20px; color:var(--blue-dark); }
-    .student-item .nm { width:72px; font-weight:700; flex-shrink:0; }
+    .student-item .no { font-weight:900; width:24px; color:var(--blue-dark); }
+    .student-item .nm { width:90px; font-weight:700; flex-shrink:0; }
     .student-item .track {
-      flex:1; height:24px; background:var(--blue-field); border-radius:6px;
+      flex:1; height:28px; background:var(--blue-field); border-radius:8px;
       border:1px solid var(--blue); min-width:0;
     }
-    .student-item .btn-pill { font-size:9px; padding:5px 8px; flex-shrink:0; }
+    .student-item .btn-pill { flex-shrink:0; }
 
-    .create-top { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
+    .create-top { display:flex; gap:16px; margin-bottom:12px; align-items:flex-start; }
     .create-logo {
-      width:88px; height:88px; background:var(--blue); border-radius:10px;
+      width:120px; height:88px; background:var(--blue); border-radius:22px;
       display:flex; align-items:center; justify-content:center; color:#fff;
-      font-size:10px; font-weight:700; text-align:center; line-height:1.35; flex-shrink:0;
+      font-size:14px; font-weight:700; text-align:center; line-height:1.35; flex-shrink:0;
     }
     .create-title-in {
-      flex:1; background:var(--blue-field); border:1px solid var(--blue);
-      border-radius:10px; padding:12px; font-family:inherit; font-size:14px; font-weight:700;
+      flex:1; background:var(--blue); border:none; color:#fff;
+      border-radius:22px; padding:16px 24px; font-family:inherit; font-size:22px; font-weight:800;
       min-height:88px;
     }
-    .create-note { font-size:10px; color:var(--muted); margin-bottom:12px; line-height:1.55; }
-    .create-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
-    .create-grid .field { margin:0; min-height:78px; }
+    .create-title-in::placeholder { color:rgba(255,255,255,0.75); }
+    .create-note { font-size:13px; color:var(--muted); margin-bottom:14px; line-height:1.55; }
+    .create-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:14px; }
+    .create-grid .field { margin:0; min-height:90px; }
     .create-foot { text-align:right; margin-top:8px; }
     .btn-big {
       background:var(--blue); color:#fff; border:none; border-radius:999px;
-      padding:10px 24px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;
+      padding:12px 28px; font-size:16px; font-weight:800; cursor:pointer; font-family:inherit;
     }
 
     .q-item {
@@ -239,12 +273,15 @@
     .modal-btns .ok { background:var(--blue); color:#fff; }
     .err { color:#e74c3c; font-size:11px; min-height:16px; margin-bottom:6px; }
 
-    @media (max-width:720px) {
-      body { padding:8px; }
-      .app { flex-direction:column; aspect-ratio:auto; min-height:auto; max-width:100%; }
-      .sidebar { width:100%; border-right:none; border-bottom:3px solid var(--blue); flex-direction:row; flex-wrap:wrap; align-items:center; gap:6px; padding:10px; }
+    @media (max-width:800px) {
+      .app { flex-direction:column; min-height:auto; }
+      .sidebar { width:100%; border-right:none; border-bottom:5px solid var(--blue); flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px; padding:16px; }
       .brand { margin-bottom:0; }
       .nav { flex-direction:row; flex-wrap:wrap; }
+      .screen { padding:16px; }
+      .toolbar { grid-template-columns:1fr; justify-items:start; }
+      .toolbar-right { justify-self:start; }
+      .hero-title, .course-banner h2 { font-size:20px; }
       .create-grid { grid-template-columns:1fr; }
     }
   </style>
@@ -253,8 +290,11 @@
   <div class="app">
     <aside class="sidebar">
       <div class="brand" onclick="goDefaultPage()">
-        <svg class="apple" viewBox="0 0 32 32"><circle cx="16" cy="18" r="11" fill="#e74c3c"/><ellipse cx="16" cy="8" rx="4" ry="6" fill="#27ae60" transform="rotate(-20 16 8)"/></svg>
-        <div class="brand-name">동아플</div>
+        <div class="brand-sub">동아리용 학습 어플,</div>
+        <div class="brand-row">
+          <div class="brand-name">동아플</div>
+          <svg class="apple" viewBox="0 0 32 32"><circle cx="16" cy="18" r="11" fill="#e74c3c"/><ellipse cx="16" cy="8" rx="4" ry="6" fill="#27ae60" transform="rotate(-20 16 8)"/></svg>
+        </div>
       </div>
       <nav class="nav" id="nav-student">
         <button class="nav-btn active" data-p="mine" onclick="showPage('mine')">나의 강의</button>
@@ -275,6 +315,7 @@
       <div class="screen">
         <div class="toolbar">
           <div id="auth-area"></div>
+          <div class="toolbar-center" id="toolbar-center"></div>
           <div class="toolbar-right" id="toolbar-extra"></div>
         </div>
 
@@ -449,12 +490,13 @@
       return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    function starsHtml(rating, greyIfZero) {
+    function starsHtml(rating) {
       const r = Number(rating) || 0;
-      const cls = (greyIfZero && r === 0) ? 'stars grey' : 'stars';
       let s = '';
-      for (let i = 1; i <= 5; i++) s += i <= Math.round(r) ? '★' : '☆';
-      return `<span class="${cls}">${s}</span>`;
+      for (let i = 1; i <= 5; i++) {
+        s += `<span style="color:${i <= Math.round(r) ? 'var(--star)' : 'var(--star-empty)'}">★</span>`;
+      }
+      return `<span class="stars">${s}</span>`;
     }
     function avgRating(id) {
       const rs = reviews.filter(r => r.courseId === id);
@@ -468,6 +510,7 @@
     function myEnrollments() { return user ? enrollments.filter(e => e.uid === user.uid) : []; }
 
     function setToolbarExtra(html) { document.getElementById('toolbar-extra').innerHTML = html || ''; }
+    function setToolbarCenter(html) { document.getElementById('toolbar-center').innerHTML = html || ''; }
 
     function renderAuth() {
       const el = document.getElementById('auth-area');
@@ -522,12 +565,12 @@
       user = { uid:'u:'+id, username:id, displayName:data.displayName||id, role:data.role||authRole, grade:data.grade||'초급', points:data.points||0 };
       writeLS(LS.user, user); closeLogin(); renderAuth(); goDefaultPage();
     }
-    function logout() { user = null; localStorage.removeItem(LS.user); renderAuth(); setToolbarExtra(''); showPage('external'); }
+    function logout() { user = null; localStorage.removeItem(LS.user); renderAuth(); setToolbarExtra(''); setToolbarCenter(''); showPage('mine'); }
 
     function goDefaultPage() { showPage(isTeacher() ? 'questions' : 'mine'); }
 
     function showPage(id) {
-      if (['mine','mypage','homework'].includes(id) && !user) { openLogin(); return; }
+      if (['mypage','homework'].includes(id) && !user) { openLogin(); return; }
       if (['students','create','questions'].includes(id)) {
         if (!user) { openLogin(); setAuthRole('teacher'); return; }
         if (!isTeacher()) { alert('선생님 계정으로 로그인해 주세요'); return; }
@@ -536,13 +579,14 @@
       document.getElementById('page-'+id).classList.add('active');
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.p === id));
       setToolbarExtra('');
+      setToolbarCenter('');
       if (id==='external') renderExternal();
       if (id==='mine') renderMine();
       if (id==='mypage') renderMypage();
       if (id==='homework') renderHomework();
       if (id==='students') renderStudents();
       if (id==='questions') renderTeacherQuestions();
-      if (id==='create') setToolbarExtra('');
+      if (id==='create') { setToolbarExtra(''); setToolbarCenter(''); }
     }
 
     function renderExternal() {
@@ -552,12 +596,15 @@
       empty.style.display='none';
       list.innerHTML = courses.map(c => {
         const avg = avgRating(c.id);
+        const enrolled = user && myEnrollments().some(e => e.courseId===c.id);
         return `<div class="ext-card">
-          <div class="logo-box">(강의<br>로고)</div>
+          <div class="logo-box">강의 로고</div>
           <h3>${esc(c.title)}</h3>
-          ${starsHtml(avg, true)}
+          ${starsHtml(avg)}
           <div class="ext-card-actions">
             <button class="btn-pill white" onclick="openReviewsView('${c.id}')">후기 보기</button>
+            ${enrolled ? `<button class="btn-pill" onclick="showPage('mine');renderMine('${c.id}')">내 강의</button>`
+              : `<button class="btn-pill" onclick="enrollCourse('${c.id}')">수강하기</button>`}
           </div>
         </div>`;
       }).join('');
@@ -574,33 +621,63 @@
 
     function renderMine(forceId) {
       const box = document.getElementById('mine-content');
-      if (!user) { box.innerHTML='<div class="empty">Log in 후 나의 강의를 볼 수 있어요.</div>'; return; }
-      const mine = myEnrollments();
-      if (!mine.length) { box.innerHTML='<div class="empty">외부 강의들에서 수강 신청해 주세요.</div>'; setToolbarExtra(''); return; }
+      const mine = user ? myEnrollments() : [];
       const en = mine.find(e => e.courseId === (forceId||selectedCourseId)) || mine[0];
-      selectedCourseId = en.courseId;
-      const c = getCourse(en.courseId);
-      if (!c) { box.innerHTML='<div class="empty">강의를 찾을 수 없어요.</div>'; return; }
-      const avg = avgRating(c.id);
-      const myRev = myReviewFor(c.id);
-      const week = Number(en.currentWeek||1), maxW = Number(c.maxWeeks||8);
-      const myEvals = evaluations.filter(e => e.uid===user.uid && e.courseId===c.id);
-      const myQs = questions.filter(q => q.uid===user.uid && q.courseId===c.id);
+      if (en) selectedCourseId = en.courseId;
+      const c = en ? getCourse(en.courseId) : null;
+      const week = en ? Number(en.currentWeek||1) : '';
+      const maxW = c ? Number(c.maxWeeks||8) : '최대 주차';
+      const title = c ? c.title : '강의 제목';
+      const content = c ? (c.content||c.desc||'그 주차 학습내용') : '그 주차 학습내용';
+      const materials = c ? (c.materials||'없음') : '그 주차 준비물';
+      const avg = c ? avgRating(c.id) : 0;
+      const myRev = (user && c) ? myReviewFor(c.id) : null;
+      const myEvals = (user && c) ? evaluations.filter(e => e.uid===user.uid && e.courseId===c.id) : [];
+      const myQs = (user && c) ? questions.filter(q => q.uid===user.uid && q.courseId===c.id) : [];
+      const rating = myRev ? myRev.rating : avg;
 
-      setToolbarExtra(`<div style="display:flex;align-items:center;gap:10px">${starsHtml(myRev ? myRev.rating : avg, !myRev && avg===0)}<button class="btn-pill" onclick="openReview('${c.id}')">후기 작성</button></div>`);
+      setToolbarCenter(`<span>별점</span>${starsHtml(rating)}`);
+      setToolbarExtra(c && user
+        ? `<button class="btn-pill" onclick="openReview('${c.id}')">후기 작성</button>`
+        : `<button class="btn-pill" onclick="${user ? 'showPage(\'external\')' : 'openLogin()'}">후기 작성</button>`);
+
+      const evalText = myEvals.map(e => {
+        let t = esc(e.text);
+        if (e.teacherReply) t += '\n선생님: ' + esc(e.teacherReply);
+        return t;
+      }).join('\n');
+      const qAttr = (c && user)
+        ? `onblur="if(this.value.trim())submitQuestion('${c.id}')"`
+        : `onclick="openLogin()"`;
+      const eAttr = (c && user)
+        ? `onblur="if(this.value.trim())submitEval('${c.id}')"`
+        : `onclick="openLogin()"`;
 
       box.innerHTML = `
-        <div class="course-banner">
-          <div class="logo-box">(강의<br>로고)</div>
-          <div><h2>${esc(c.title)}</h2><div class="week-text">현재: ${week}주차 / 최대 ${maxW}주차</div></div>
+        <div class="course-hero">
+          <div class="hero-logo">강의 로고</div>
+          <div class="hero-title">${esc(title)}</div>
         </div>
-        <div class="field"><div class="field-label sm">학습내용 미리보기</div><p>${esc(c.content||c.desc||'')}</p></div>
-        <div class="field"><div class="field-label sm">준비물</div><p>${esc(c.materials||'없음')}</p></div>
-        <div class="field"><div class="field-label">질문하기</div><textarea id="mine-question" placeholder="" onblur="if(this.value.trim())submitQuestion('${c.id}')"></textarea></div>
-        ${myQs.map(q=>`<div class="field"><p><b>Q.</b> ${esc(q.text)}${q.answer?`<br><b>A.</b> ${esc(q.answer)}`:''}</p></div>`).join('')}
-        <div class="field"><div class="field-label">평가하기</div><textarea id="mine-eval" placeholder="" onblur="if(this.value.trim())submitEval('${c.id}')"></textarea></div>
-        <div class="field"><div class="field-label">평가결과</div><div class="field-sub">선생님이 공부 태도를 관찰한 결과예요</div>
-          ${myEvals.length ? myEvals.map(e=>`<p>${esc(e.text)}${e.teacherReply?`<br><em>선생님: ${esc(e.teacherReply)}</em>`:''}</p>`).join('') : '<p>아직 결과가 없어요.</p>'}
+        <div class="info-lines">
+          <div>현재 : (${week})주차 / ${c ? '최대 ' + maxW + '주차' : '최대 주차'}</div>
+          <div>학습내용 미리보기 : ${esc(content)}</div>
+          <div>준비물 : ${esc(materials)}</div>
+        </div>
+        <div class="action-block">
+          <h3>질문하기</h3>
+          <p class="hint">궁금한 점이 있나요?</p>
+          <textarea class="blue-bar" id="mine-question" ${qAttr}></textarea>
+          ${myQs.map(q=>`<div class="blue-bar-static" style="margin-top:8px"><b>Q.</b> ${esc(q.text)}${q.answer?`<br><b>A.</b> ${esc(q.answer)}`:''}</div>`).join('')}
+        </div>
+        <div class="action-block">
+          <h3>평가하기</h3>
+          <p class="hint">아쉬웠던 점이 있나요?</p>
+          <textarea class="blue-bar" id="mine-eval" ${eAttr}></textarea>
+        </div>
+        <div class="action-block">
+          <h3>평가결과</h3>
+          <p class="hint">선생님이 공부 태도를 관찰한 결과에요.</p>
+          <div class="blue-bar-static">${evalText}</div>
         </div>`;
     }
 
@@ -675,9 +752,13 @@
       const c = myCourses[0];
       const students = enrollments.filter(e => e.courseId===c.id);
       const avg = avgRating(c.id);
-      setToolbarExtra(starsHtml(avg, true));
+      setToolbarCenter(`<span>별점</span>${starsHtml(avg)}`);
       box.innerHTML = `
-        <div class="course-banner"><div class="logo-box">(강의<br>로고)</div><div><h2>${esc(c.title)}</h2><div class="week-text">현재: 1주차 / 최대 ${c.maxWeeks||8}주차</div></div></div>
+        <div class="course-hero">
+          <div class="hero-logo">강의 로고</div>
+          <div class="hero-title">${esc(c.title)}</div>
+        </div>
+        <div class="info-lines">현재 : (1)주차 / ${c.maxWeeks||8}주차</div>
         <div class="section-title">학생 리스트</div>
         ${students.length ? students.map((s,i)=>`<div class="student-item">
           <span class="no">${i+1}</span><span class="nm">${esc(s.name)}</span><div class="track"></div>
