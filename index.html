@@ -457,6 +457,11 @@
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwAYvsUMtk-oRtCqZGRdIw4Y4DsJ4lNH9t_M-VMwR7u0pfDj2GXrStsCNU9GeR7BLrH4g/exec';
     const TEACHER_CODE = '2026';
     const DATA_VERSION = 'dap-v5';
+    const STARTER_COURSES = [
+      { id:'starter-python', title:'파이썬 기초', desc:'', maxWeeks:8, content:'변수, 조건문, 반복문으로 작은 프로그램을 만든다.', materials:'노트북, 파이썬', homework:'구구단을 출력하기', teacherUid:'', teacherName:'동아플' },
+      { id:'starter-web', title:'웹페이지 만들기', desc:'', maxWeeks:6, content:'HTML로 구조를 잡고 CSS로 색과 배치를 바꾼다.', materials:'노트북, 브라우저', homework:'자기소개 페이지 만들기', teacherUid:'', teacherName:'동아플' },
+      { id:'starter-algo', title:'알고리즘 맛보기', desc:'', maxWeeks:8, content:'배열과 반복으로 최댓값과 정렬을 따라 한다.', materials:'노트, 필기구', homework:'숫자 5개의 최댓값 구하기', teacherUid:'', teacherName:'동아플' }
+    ];
     const LS = {
       user:'dap_user', accounts:'dap_accounts', courses:'dap_courses', enroll:'dap_enroll',
       questions:'dap_questions', reviews:'dap_reviews', evals:'dap_evals', progress:'dap_progress'
@@ -712,7 +717,11 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwAYvsUMtk-oRtC
       return rs.length ? rs.reduce((a, r) => a + Number(r.rating || 0), 0) / rs.length : 0;
     }
     function isTeacher() { return !!(user && user.role === 'teacher'); }
-    function getCourse(id) { return courses.find(c => sameId(c.id, id)); }
+    function allCourses() {
+      const ids = new Set(courses.map(c => String(c.id)));
+      return STARTER_COURSES.filter(s => !ids.has(String(s.id))).concat(courses);
+    }
+    function getCourse(id) { return allCourses().find(c => sameId(c.id, id)); }
     function myEnrollments() { return user ? enrollments.filter(e => sameId(e.uid, user.uid)) : []; }
     function myTeaching() { return user ? courses.filter(c => sameId(c.teacherUid, user.uid)) : []; }
     function isTeacherNote(e) {
@@ -857,9 +866,10 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwAYvsUMtk-oRtC
     function renderExternal() {
       const list = document.getElementById('external-list');
       const empty = document.getElementById('external-empty');
-      if (!courses.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+      const catalog = allCourses();
+      if (!catalog.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
       empty.style.display = 'none';
-      list.innerHTML = courses.map(c => {
+      list.innerHTML = catalog.map(c => {
         const enrolled = user && myEnrollments().some(e => sameId(e.courseId, c.id));
         return `<div class="ext-card">
           <div class="logo-box">강의 로고</div>
